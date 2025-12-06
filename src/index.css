@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* Import a coding font */
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+
+body {
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  background-color: black;
+}
+/* Add to your global styles */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
