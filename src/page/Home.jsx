@@ -32,7 +32,6 @@ const Home = () => {
 
   return (
     <div className="relative">
-      <Navbar />
       <HeroSection />
       <div className="bg-black">
         <SkillsSection />
@@ -42,7 +41,6 @@ const Home = () => {
         <ServicesSection />
         <TestimonialsSection />
         <ContactSection />
-        <FooterSection />
       </div>
     </div>
   );
