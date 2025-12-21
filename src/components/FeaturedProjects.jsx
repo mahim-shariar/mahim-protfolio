@@ -45,6 +45,324 @@ import {
 import { useApi } from "../hooks/useApi";
 import { BsViewList } from "react-icons/bs";
 
+// HandDrawnBorder component moved outside and exported
+export const HandDrawnBorder = memo(({ isActive, color = "white" }) => (
+  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+    {/* Top border */}
+    <svg
+      className="absolute top-0 left-0 w-full h-1 transition-all duration-500 ease-in-out"
+      viewBox="0 0 100 1"
+      preserveAspectRatio="none"
+    >
+      <path
+        d="M0,0.5 Q10,0.2 20,0.5 T40,0.3 T60,0.6 T80,0.4 T100,0.5"
+        fill="none"
+        stroke={color}
+        strokeWidth="0.5"
+        strokeOpacity={isActive ? 0.8 : 0.3}
+        strokeLinecap="round"
+        className="transition-all duration-500 ease-in-out"
+      />
+    </svg>
+    {/* Right border */}
+    <svg
+      className="absolute top-0 right-0 w-1 h-full transition-all duration-500 ease-in-out"
+      viewBox="0 0 1 100"
+      preserveAspectRatio="none"
+    >
+      <path
+        d="M0.5,0 Q0.8,10 0.5,20 T0.7,40 T0.4,60 T0.6,80 T0.5,100"
+        fill="none"
+        stroke={color}
+        strokeWidth="0.5"
+        strokeOpacity={isActive ? 0.8 : 0.3}
+        strokeLinecap="round"
+        className="transition-all duration-500 ease-in-out"
+      />
+    </svg>
+    {/* Bottom border */}
+    <svg
+      className="absolute bottom-0 left-0 w-full h-1 transition-all duration-500 ease-in-out"
+      viewBox="0 0 100 1"
+      preserveAspectRatio="none"
+    >
+      <path
+        d="M0,0.5 Q15,0.7 30,0.4 T50,0.6 T70,0.3 T90,0.7 T100,0.5"
+        fill="none"
+        stroke={color}
+        strokeWidth="0.5"
+        strokeOpacity={isActive ? 0.8 : 0.3}
+        strokeLinecap="round"
+        className="transition-all duration-500 ease-in-out"
+      />
+    </svg>
+    {/* Left border */}
+    <svg
+      className="absolute top-0 left-0 w-1 h-full transition-all duration-500 ease-in-out"
+      viewBox="0 0 1 100"
+      preserveAspectRatio="none"
+    >
+      <path
+        d="M0.5,0 Q0.3,15 0.5,30 T0.3,50 T0.6,70 T0.4,90 T0.5,100"
+        fill="none"
+        stroke={color}
+        strokeWidth="0.5"
+        strokeOpacity={isActive ? 0.8 : 0.3}
+        strokeLinecap="round"
+        className="transition-all duration-500 ease-in-out"
+      />
+    </svg>
+  </div>
+));
+
+// Extracted ProjectCard component for better performance
+const ProjectCard = React.memo(
+  ({ project, index, openModal, isHovered, setIsHovered }) => {
+    const projectKey = `project-${project._id}`;
+
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, scale: 0.9, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: index * 0.05 }} // Reduced delay
+        className="relative group"
+        whileHover={{ y: -4, transition: { duration: 0.2 } }} // Reduced y movement
+        onMouseEnter={() =>
+          setIsHovered((prev) => ({
+            ...prev,
+            [projectKey]: true,
+          }))
+        }
+        onMouseLeave={() =>
+          setIsHovered((prev) => ({
+            ...prev,
+            [projectKey]: false,
+          }))
+        }
+      >
+        {/* Project Card */}
+        <div className="relative h-full overflow-hidden rounded-2xl bg-black/60 backdrop-blur-sm border border-white/10 group-hover:border-white/30 group-hover:bg-black/80 transition-all duration-300">
+          {" "}
+          {/* Reduced duration */}
+          {/* Hand-drawn border */}
+          <HandDrawnBorder isActive={isHovered[projectKey]} />
+          {/* Content */}
+          <div className="p-5 relative">
+            {/* Title */}
+            <div className="relative mb-3 overflow-hidden">
+              <h3 className="text-lg font-bold text-white group-hover:text-white/90 transition-colors duration-300">
+                {project.title}
+              </h3>
+            </div>
+
+            {/* Description */}
+            <p className="text-white/50 text-sm mb-4 leading-relaxed group-hover:text-white/70 transition-colors duration-300">
+              {project.description}
+            </p>
+
+            {/* Tech Stack */}
+            <div className="flex flex-wrap gap-2 mb-5">
+              {project.technologies?.slice(0, 4).map((tech, techIndex) => (
+                <span
+                  key={techIndex}
+                  className="relative px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/60 group-hover:text-white/80 group-hover:bg-white/10 group-hover:border-white/20 transition-all duration-300 cursor-default overflow-hidden"
+                >
+                  <span className="relative z-10">{tech}</span>
+                </span>
+              ))}
+              {project.technologies?.length > 4 && (
+                <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/40">
+                  +{project.technologies.length - 4} more
+                </span>
+              )}
+            </div>
+
+            {/* Bottom Button Section */}
+            <div className="pt-4 border-t border-white/10 group-hover:border-white/20 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                {/* View Details Button */}
+                <button
+                  onClick={() => openModal(project)}
+                  className="relative px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span className="text-sm font-medium">Details</span>
+                </button>
+
+                {/* Quick Actions */}
+                <div className="flex gap-2">
+                  {/* Preview Button */}
+                  {project.liveUrl && (
+                    <a
+                      href={project.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative w-10 h-10 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center justify-center"
+                      title="Live Preview"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+
+                  {/* Code Button */}
+                  {project.githubUrl && (
+                    <a
+                      href={project.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative w-10 h-10 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center justify-center"
+                      title="View Code"
+                    >
+                      <Code className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+);
+
+// Extracted ProjectModal component
+const ProjectModal = React.memo(
+  ({ isModalOpen, selectedProject, closeModal, modalRef }) => {
+    if (!isModalOpen || !selectedProject) return null;
+
+    return (
+      <AnimatePresence>
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50"
+            onClick={closeModal}
+          />
+
+          {/* Modal Content */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              ref={modalRef}
+              key="modal"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{
+                duration: 0.3,
+                ease: "easeOut",
+              }}
+              className="relative w-full max-w-4xl rounded-2xl bg-black/95 backdrop-blur-sm border border-white/10 overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <HandDrawnBorder isActive={true} />
+
+              {/* Modal Header */}
+              <div className="relative p-6 border-b border-white/10">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 pr-8">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="px-3 py-1 bg-black/60 backdrop-blur-sm rounded-lg border border-white/10">
+                        <span className="text-xs font-medium text-white/80 uppercase tracking-wider">
+                          {selectedProject.categoryDisplay ||
+                            selectedProject.category}
+                        </span>
+                      </div>
+                      {selectedProject.isFeatured && (
+                        <div className="px-3 py-1 bg-yellow-500/20 backdrop-blur-sm rounded-lg border border-yellow-500/30">
+                          <span className="text-xs font-medium text-yellow-300 uppercase tracking-wider flex items-center gap-1">
+                            <Star className="w-3 h-3" />
+                            Featured
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">
+                      {selectedProject.title}
+                    </h2>
+                  </div>
+                  <button
+                    onClick={closeModal}
+                    className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/60 hover:text-white transition-all duration-300 flex-shrink-0"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 max-h-[60vh] overflow-y-auto">
+                {/* Full Description */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-white mb-3">
+                    Project Overview
+                  </h3>
+                  <p className="text-white/70 leading-relaxed">
+                    {selectedProject.fullDescription}
+                  </p>
+                </div>
+
+                {/* Tech Stack */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-white mb-3">
+                    Technologies Used
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProject.technologies?.map((tech, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white/70 hover:text-white hover:border-white/20 transition-all duration-300"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="relative p-6 border-t border-white/10 bg-black/60">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex flex-wrap gap-3">
+                    {selectedProject.liveUrl && (
+                      <a
+                        href={selectedProject.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center gap-2"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Live Preview
+                      </a>
+                    )}
+                    {selectedProject.githubUrl && (
+                      <a
+                        href={selectedProject.githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-white/90 transition-all duration-300 flex items-center gap-2"
+                      >
+                        <Code className="w-4 h-4" />
+                        View Code
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </>
+      </AnimatePresence>
+    );
+  }
+);
+
 const FeaturedProjects = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedProject, setSelectedProject] = useState(null);
@@ -319,76 +637,6 @@ const FeaturedProjects = () => {
     },
     [closeModal]
   );
-
-  // Smooth hand-drawn border component - memoized
-  const HandDrawnBorder = memo(({ isActive, color = "white" }) => (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {/* Top border */}
-      <svg
-        className="absolute top-0 left-0 w-full h-1 transition-all duration-500 ease-in-out"
-        viewBox="0 0 100 1"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0,0.5 Q10,0.2 20,0.5 T40,0.3 T60,0.6 T80,0.4 T100,0.5"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-500 ease-in-out"
-        />
-      </svg>
-      {/* Right border */}
-      <svg
-        className="absolute top-0 right-0 w-1 h-full transition-all duration-500 ease-in-out"
-        viewBox="0 0 1 100"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0.5,0 Q0.8,10 0.5,20 T0.7,40 T0.4,60 T0.6,80 T0.5,100"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-500 ease-in-out"
-        />
-      </svg>
-      {/* Bottom border */}
-      <svg
-        className="absolute bottom-0 left-0 w-full h-1 transition-all duration-500 ease-in-out"
-        viewBox="0 0 100 1"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0,0.5 Q15,0.7 30,0.4 T50,0.6 T70,0.3 T90,0.7 T100,0.5"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-500 ease-in-out"
-        />
-      </svg>
-      {/* Left border */}
-      <svg
-        className="absolute top-0 left-0 w-1 h-full transition-all duration-500 ease-in-out"
-        viewBox="0 0 1 100"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0.5,0 Q0.3,15 0.5,30 T0.3,50 T0.6,70 T0.4,90 T0.5,100"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-500 ease-in-out"
-        />
-      </svg>
-    </div>
-  ));
 
   // Optimized floating particles - reduced count and simplified
   const FloatingBinaryParticles = React.memo(() => (
@@ -1051,253 +1299,5 @@ const FeaturedProjects = () => {
     </div>
   );
 };
-
-// Extracted ProjectCard component for better performance
-const ProjectCard = React.memo(
-  ({ project, index, openModal, isHovered, setIsHovered }) => {
-    const projectKey = `project-${project._id}`;
-
-    return (
-      <motion.div
-        layout
-        initial={{ opacity: 0, scale: 0.9, y: 30 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: index * 0.05 }} // Reduced delay
-        className="relative group"
-        whileHover={{ y: -4, transition: { duration: 0.2 } }} // Reduced y movement
-        onMouseEnter={() =>
-          setIsHovered((prev) => ({
-            ...prev,
-            [projectKey]: true,
-          }))
-        }
-        onMouseLeave={() =>
-          setIsHovered((prev) => ({
-            ...prev,
-            [projectKey]: false,
-          }))
-        }
-      >
-        {/* Project Card */}
-        <div className="relative h-full overflow-hidden rounded-2xl bg-black/60 backdrop-blur-sm border border-white/10 group-hover:border-white/30 group-hover:bg-black/80 transition-all duration-300">
-          {" "}
-          {/* Reduced duration */}
-          {/* Hand-drawn border */}
-          <HandDrawnBorder isActive={isHovered[projectKey]} />
-          {/* Content */}
-          <div className="p-5 relative">
-            {/* Title */}
-            <div className="relative mb-3 overflow-hidden">
-              <h3 className="text-lg font-bold text-white group-hover:text-white/90 transition-colors duration-300">
-                {project.title}
-              </h3>
-            </div>
-
-            {/* Description */}
-            <p className="text-white/50 text-sm mb-4 leading-relaxed group-hover:text-white/70 transition-colors duration-300">
-              {project.description}
-            </p>
-
-            {/* Tech Stack */}
-            <div className="flex flex-wrap gap-2 mb-5">
-              {project.technologies?.slice(0, 4).map((tech, techIndex) => (
-                <span
-                  key={techIndex}
-                  className="relative px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/60 group-hover:text-white/80 group-hover:bg-white/10 group-hover:border-white/20 transition-all duration-300 cursor-default overflow-hidden"
-                >
-                  <span className="relative z-10">{tech}</span>
-                </span>
-              ))}
-              {project.technologies?.length > 4 && (
-                <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/40">
-                  +{project.technologies.length - 4} more
-                </span>
-              )}
-            </div>
-
-            {/* Bottom Button Section */}
-            <div className="pt-4 border-t border-white/10 group-hover:border-white/20 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                {/* View Details Button */}
-                <button
-                  onClick={() => openModal(project)}
-                  className="relative px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center gap-2"
-                >
-                  <Eye className="w-4 h-4" />
-                  <span className="text-sm font-medium">Details</span>
-                </button>
-
-                {/* Quick Actions */}
-                <div className="flex gap-2">
-                  {/* Preview Button */}
-                  {project.liveUrl && (
-                    <a
-                      href={project.liveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="relative w-10 h-10 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center justify-center"
-                      title="Live Preview"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  )}
-
-                  {/* Code Button */}
-                  {project.githubUrl && (
-                    <a
-                      href={project.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="relative w-10 h-10 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center justify-center"
-                      title="View Code"
-                    >
-                      <Code className="w-4 h-4" />
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
-);
-
-// Extracted ProjectModal component
-const ProjectModal = React.memo(
-  ({ isModalOpen, selectedProject, closeModal, modalRef }) => {
-    if (!isModalOpen || !selectedProject) return null;
-
-    return (
-      <AnimatePresence>
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50"
-            onClick={closeModal}
-          />
-
-          {/* Modal Content */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              ref={modalRef}
-              key="modal"
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{
-                duration: 0.3,
-                ease: "easeOut",
-              }}
-              className="relative w-full max-w-4xl rounded-2xl bg-black/95 backdrop-blur-sm border border-white/10 overflow-hidden shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <HandDrawnBorder isActive={true} />
-
-              {/* Modal Header */}
-              <div className="relative p-6 border-b border-white/10">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 pr-8">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="px-3 py-1 bg-black/60 backdrop-blur-sm rounded-lg border border-white/10">
-                        <span className="text-xs font-medium text-white/80 uppercase tracking-wider">
-                          {selectedProject.categoryDisplay ||
-                            selectedProject.category}
-                        </span>
-                      </div>
-                      {selectedProject.isFeatured && (
-                        <div className="px-3 py-1 bg-yellow-500/20 backdrop-blur-sm rounded-lg border border-yellow-500/30">
-                          <span className="text-xs font-medium text-yellow-300 uppercase tracking-wider flex items-center gap-1">
-                            <Star className="w-3 h-3" />
-                            Featured
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <h2 className="text-2xl font-bold text-white">
-                      {selectedProject.title}
-                    </h2>
-                  </div>
-                  <button
-                    onClick={closeModal}
-                    className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/60 hover:text-white transition-all duration-300 flex-shrink-0"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Modal Content */}
-              <div className="p-6 max-h-[60vh] overflow-y-auto">
-                {/* Full Description */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-white mb-3">
-                    Project Overview
-                  </h3>
-                  <p className="text-white/70 leading-relaxed">
-                    {selectedProject.fullDescription}
-                  </p>
-                </div>
-
-                {/* Tech Stack */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-white mb-3">
-                    Technologies Used
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedProject.technologies?.map((tech, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white/70 hover:text-white hover:border-white/20 transition-all duration-300"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="relative p-6 border-t border-white/10 bg-black/60">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex flex-wrap gap-3">
-                    {selectedProject.liveUrl && (
-                      <a
-                        href={selectedProject.liveUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center gap-2"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        Live Preview
-                      </a>
-                    )}
-                    {selectedProject.githubUrl && (
-                      <a
-                        href={selectedProject.githubUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-white/90 transition-all duration-300 flex items-center gap-2"
-                      >
-                        <Code className="w-4 h-4" />
-                        View Code
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </>
-      </AnimatePresence>
-    );
-  }
-);
 
 export default FeaturedProjects;
