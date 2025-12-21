@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Terminal,
@@ -21,6 +21,7 @@ import {
   Award,
   Coffee,
   PenTool,
+  Download,
 } from "lucide-react";
 // Import React Icons
 import { FaReact, FaNodeJs, FaPython, FaGitAlt } from "react-icons/fa";
@@ -31,8 +32,192 @@ import {
   SiGraphql,
   SiDocker,
 } from "react-icons/si";
+import { useApi } from "../hooks/useApi";
+import logo from "../assets/my-profile.png";
+
+// Create a separate component for the Matrix background
+const MatrixBackground = () => {
+  const canvasRef = useRef(null);
+  const animationIdRef = useRef(null);
+
+  // Initialize Matrix animation
+  const initMatrix = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      console.log("Canvas ref is null, retrying...");
+      return false;
+    }
+
+    console.log("Initializing Matrix animation on canvas:", canvas);
+
+    // Function to properly set canvas size
+    const setCanvasSize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+
+      // Set canvas dimensions to exactly match displayed size
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+
+      return { dpr, rect };
+    };
+
+    // Initial size setup
+    const { dpr } = setCanvasSize();
+    const ctx = canvas.getContext("2d");
+
+    // Dudle-style characters
+    const characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz$+-*/=%\"'#&_(),.;:?!\\|{}<>[]^~ 你好世界北京上海中国文化";
+
+    const fontSize = 14;
+    const columns = Math.floor(canvas.width / dpr / fontSize);
+
+    // Rain drops
+    const rainDrops = Array(columns).fill(1);
+
+    // Dudle-style color palette
+    const colors = {
+      primary: "#FFFFFF",
+      secondary: "#F0F0F0",
+      tertiary: "#A0A0A0",
+      dark: "#202020",
+      background: "#000000",
+    };
+
+    function draw() {
+      const currentWidth = canvas.width / dpr;
+      const currentHeight = canvas.height / dpr;
+
+      // Semi-transparent black for trailing effect
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, currentWidth, currentHeight);
+
+      // Set font
+      ctx.font = `500 ${fontSize}px 'Courier New', 'Monaco', monospace`;
+      ctx.textAlign = "center";
+
+      // Draw rain drops
+      for (let i = 0; i < rainDrops.length; i++) {
+        if (i * fontSize > currentWidth) continue;
+
+        const char = characters[Math.floor(Math.random() * characters.length)];
+
+        let color;
+        const position = rainDrops[i] * fontSize;
+        const maxHeight = currentHeight;
+
+        if (position < maxHeight * 0.2) {
+          color = colors.primary;
+          ctx.globalAlpha = 1.0;
+        } else if (position < maxHeight * 0.5) {
+          color = colors.secondary;
+          ctx.globalAlpha = 0.8;
+        } else if (position < maxHeight * 0.8) {
+          color = colors.tertiary;
+          ctx.globalAlpha = 0.6;
+        } else {
+          color = colors.dark;
+          ctx.globalAlpha = 0.4;
+        }
+
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = color;
+        ctx.fillText(char, i * fontSize, rainDrops[i] * fontSize);
+        ctx.shadowBlur = 0;
+
+        rainDrops[i] += 0.8 + Math.random() * 0.4;
+
+        if (rainDrops[i] * fontSize > currentHeight && Math.random() > 0.97) {
+          rainDrops[i] = 0;
+        }
+      }
+
+      ctx.globalAlpha = 1.0;
+    }
+
+    // Animation loop
+    let lastTime = 0;
+    const interval = 1000 / 24;
+
+    function animate(timestamp) {
+      if (!lastTime) lastTime = timestamp;
+      const deltaTime = timestamp - lastTime;
+
+      if (deltaTime > interval) {
+        draw();
+        lastTime = timestamp - (deltaTime % interval);
+      }
+
+      animationIdRef.current = requestAnimationFrame(animate);
+    }
+
+    // Start animation
+    animationIdRef.current = requestAnimationFrame(animate);
+
+    // Handle resize
+    const handleResize = () => {
+      const { dpr: newDpr } = setCanvasSize();
+      const newColumns = Math.floor(canvas.width / newDpr / fontSize);
+      const newRainDrops = Array(newColumns).fill(1);
+
+      for (let i = 0; i < Math.min(rainDrops.length, newColumns); i++) {
+        newRainDrops[i] = rainDrops[i];
+      }
+
+      rainDrops.length = newColumns;
+      for (let i = 0; i < newColumns; i++) {
+        rainDrops[i] = newRainDrops[i] || 1;
+      }
+    };
+
+    // Initialize
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Wait a bit for DOM to be ready
+    const timer = setTimeout(() => {
+      const cleanup = initMatrix();
+      if (cleanup) {
+        return cleanup;
+      }
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+      }
+    };
+  }, [initMatrix]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 w-full h-full opacity-20 transition-opacity duration-1000 ease-in-out"
+      style={{
+        zIndex: 0,
+        pointerEvents: "none",
+      }}
+    />
+  );
+};
 
 const HeroSection = () => {
+  const api = useApi();
   const [terminalInput, setTerminalInput] = useState("");
   const [terminalHistory, setTerminalHistory] = useState([
     {
@@ -41,11 +226,28 @@ const HeroSection = () => {
     },
     { type: "input", text: "visitor@portfolio:~$ " },
   ]);
-  const canvasRef = useRef(null);
   const terminalEndRef = useRef(null);
   const [isHovered, setIsHovered] = useState({});
-  const [hoverState, setHoverState] = useState({}); // Track hover states for transitions
+  const [hoverState, setHoverState] = useState({});
 
+  // State for dynamic content
+  const [content, setContent] = useState({
+    name: "ALEX JOHNSON",
+    title: "FULL STACK DEVELOPER",
+    description:
+      "Building scalable web applications with modern technologies. Passionate about clean code, user experience, and solving complex problems with elegant solutions.",
+    resume: "",
+    social: {
+      github: "",
+      linkedin: "",
+      email: "",
+    },
+    projectCount: "50+",
+    experienceYears: "3+",
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Commands updated with dynamic content
   const commands = {
     help: "Show available commands",
     about: "Learn about me",
@@ -56,13 +258,45 @@ const HeroSection = () => {
     resume: "Download my resume",
   };
 
+  // Fetch content from API
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        setLoading(true);
+        const data = await api.get("/content");
+        if (data.data) {
+          setContent({
+            name: data.data.name || "ALEX JOHNSON",
+            title: data.data.title || "FULL STACK DEVELOPER",
+            description:
+              data.data.description ||
+              "Building scalable web applications with modern technologies. Passionate about clean code, user experience, and solving complex problems with elegant solutions.",
+            resume: data.data.resume || "",
+            social: {
+              github: data.data.social?.github || "",
+              linkedin: data.data.social?.linkedin || "",
+              email: data.data.social?.email || "hello@example.com",
+            },
+            projectCount: data.data.projectCount?.toString() || "50+",
+            experienceYears: data.data.experienceYears?.toString() || "3+",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching content:", error);
+        // Use default content if API fails
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContent();
+  }, []);
+
   // Fix scroll position on load
   useEffect(() => {
-    // Ensure page starts at top
     window.scrollTo(0, 0);
     document.documentElement.style.overflow = "hidden";
 
-    // Remove overflow hidden after page loads
     const timer = setTimeout(() => {
       document.documentElement.style.overflow = "auto";
     }, 100);
@@ -73,25 +307,18 @@ const HeroSection = () => {
     };
   }, []);
 
-  // Auto-scroll to bottom when terminal history updates
-  useEffect(() => {
-    if (terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [terminalHistory]);
+  // Auto-scroll to bottom of TERMINAL SECTION ONLY when terminal history updates
 
   // Smooth hover state transitions
   useEffect(() => {
     const entries = Object.entries(isHovered);
     entries.forEach(([key, value]) => {
       if (value && !hoverState[key]) {
-        // Hover in
         setHoverState((prev) => ({ ...prev, [key]: true }));
       } else if (!value && hoverState[key]) {
-        // Hover out with delay for smooth transition
         const timeoutId = setTimeout(() => {
           setHoverState((prev) => ({ ...prev, [key]: false }));
-        }, 200); // Delay to allow transition to complete
+        }, 200);
         return () => clearTimeout(timeoutId);
       }
     });
@@ -123,11 +350,11 @@ const HeroSection = () => {
           ...prev,
           {
             type: "output",
-            text: "I'm a passionate Full Stack Developer with 3+ years of experience.",
+            text: `I'm ${content.name}, a passionate ${content.title}.`,
           },
           {
             type: "output",
-            text: "I specialize in building modern web applications with React, Node.js, and cloud technologies.",
+            text: content.description,
           },
           { type: "input", text: "visitor@portfolio:~$ " },
         ]);
@@ -163,9 +390,9 @@ const HeroSection = () => {
         setTerminalHistory((prev) => [
           ...prev,
           { type: "output", text: "Get in touch:" },
-          { type: "output", text: "  Email: hello@example.com" },
-          { type: "output", text: "  LinkedIn: linkedin.com/in/yourname" },
-          { type: "output", text: "  GitHub: github.com/yourusername" },
+          { type: "output", text: `  Email: ${content.social.email}` },
+          { type: "output", text: `  LinkedIn: ${content.social.linkedin}` },
+          { type: "output", text: `  GitHub: ${content.social.github}` },
           { type: "input", text: "visitor@portfolio:~$ " },
         ]);
       } else if (cmd === "clear") {
@@ -177,12 +404,21 @@ const HeroSection = () => {
           { type: "input", text: "visitor@portfolio:~$ " },
         ]);
       } else if (cmd === "resume") {
-        setTerminalHistory((prev) => [
-          ...prev,
-          { type: "output", text: "Opening resume download..." },
-          { type: "output", text: "Resume download started!" },
-          { type: "input", text: "visitor@portfolio:~$ " },
-        ]);
+        if (content.resume) {
+          setTerminalHistory((prev) => [
+            ...prev,
+            { type: "output", text: "Opening resume download..." },
+            { type: "output", text: "Resume download started!" },
+            { type: "input", text: "visitor@portfolio:~$ " },
+          ]);
+          window.open(content.resume, "_blank");
+        } else {
+          setTerminalHistory((prev) => [
+            ...prev,
+            { type: "output", text: "Resume not available at the moment." },
+            { type: "input", text: "visitor@portfolio:~$ " },
+          ]);
+        }
       } else if (cmd === "view portfolio") {
         setTerminalHistory((prev) => [
           ...prev,
@@ -205,163 +441,6 @@ const HeroSection = () => {
     }
   };
 
-  // Enhanced Black and White Matrix Digital Rain Effect
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Function to properly set canvas size
-    const setCanvasSize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-
-      // Set canvas dimensions to exactly match displayed size
-      canvas.width = Math.floor(rect.width * dpr);
-      canvas.height = Math.floor(rect.height * dpr);
-
-      const ctx = canvas.getContext("2d");
-      ctx.scale(dpr, dpr);
-
-      return { dpr, rect };
-    };
-
-    // Initial size setup
-    const { dpr } = setCanvasSize();
-    const ctx = canvas.getContext("2d");
-
-    // Dudle-style characters - only ASCII for classic look
-    const characters =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz$+-*/=%\"'#&_(),.;:?!\\|{}<>[]^~ 加入一些中文词语 你好 世界 北京 上海 中国文化 中文学习 字符示例 人工智能 技术发展 美好的一天 欢迎使用";
-
-    const fontSize = 14;
-    const columns = Math.floor(canvas.width / dpr / fontSize);
-
-    // Rain drops
-    const rainDrops = Array(columns).fill(1);
-
-    // Dudle-style color palette - strictly black, white, and grayscale
-    const colors = {
-      primary: "#FFFFFF", // Pure white
-      secondary: "#F0F0F0", // Light gray
-      tertiary: "#A0A0A0", // Medium gray
-      dark: "#202020", // Dark gray
-      background: "#000000", // Pure black
-    };
-
-    function draw() {
-      // Get current canvas size
-      const currentWidth = canvas.width / dpr;
-      const currentHeight = canvas.height / dpr;
-
-      // Semi-transparent black for trailing effect
-      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-      ctx.fillRect(0, 0, currentWidth, currentHeight);
-
-      // Set font - monospace for classic terminal look
-      ctx.font = `500 ${fontSize}px 'Courier New', 'Monaco', monospace`;
-      ctx.textAlign = "center";
-
-      // Draw rain drops
-      for (let i = 0; i < rainDrops.length; i++) {
-        // Ensure we don't draw outside current columns
-        if (i * fontSize > currentWidth) continue;
-
-        // Random character
-        const char = characters[Math.floor(Math.random() * characters.length)];
-
-        // Determine color based on position - more subtle transitions
-        let color;
-        const position = rainDrops[i] * fontSize;
-        const maxHeight = currentHeight;
-
-        if (position < maxHeight * 0.2) {
-          // Head character - bright white
-          color = colors.primary;
-          ctx.globalAlpha = 1.0;
-        } else if (position < maxHeight * 0.5) {
-          // Middle section - light gray
-          color = colors.secondary;
-          ctx.globalAlpha = 0.8;
-        } else if (position < maxHeight * 0.8) {
-          // Middle-lower section - medium gray
-          color = colors.tertiary;
-          ctx.globalAlpha = 0.6;
-        } else {
-          // Tail - dark gray
-          color = colors.dark;
-          ctx.globalAlpha = 0.4;
-        }
-
-        // Draw character with subtle shadow for depth
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 10;
-        ctx.fillStyle = color;
-        ctx.fillText(char, i * fontSize, rainDrops[i] * fontSize);
-        ctx.shadowBlur = 0;
-
-        // Move drop down with variable speed for natural look
-        rainDrops[i] += 0.8 + Math.random() * 0.4;
-
-        // Reset drop randomly
-        if (rainDrops[i] * fontSize > currentHeight && Math.random() > 0.97) {
-          rainDrops[i] = 0;
-        }
-      }
-
-      // Reset alpha
-      ctx.globalAlpha = 1.0;
-    }
-
-    // Animation loop
-    let animationId;
-    let lastTime = 0;
-    const interval = 1000 / 24; // 24 FPS for classic film look
-
-    function animate(timestamp) {
-      if (!lastTime) lastTime = timestamp;
-      const deltaTime = timestamp - lastTime;
-
-      if (deltaTime > interval) {
-        draw();
-        lastTime = timestamp - (deltaTime % interval);
-      }
-
-      animationId = requestAnimationFrame(animate);
-    }
-
-    animationId = requestAnimationFrame(animate);
-
-    // Handle resize
-    const handleResize = () => {
-      const { dpr: newDpr } = setCanvasSize();
-
-      // Recalculate columns
-      const newColumns = Math.floor(canvas.width / newDpr / fontSize);
-      const newRainDrops = Array(newColumns).fill(1);
-
-      // Copy existing values if any
-      for (let i = 0; i < Math.min(rainDrops.length, newColumns); i++) {
-        newRainDrops[i] = rainDrops[i];
-      }
-
-      rainDrops.length = newColumns;
-      for (let i = 0; i < newColumns; i++) {
-        rainDrops[i] = newRainDrops[i] || 1;
-      }
-    };
-
-    // Initialize
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, []);
-
   // Handle quick command click
   const handleQuickCommand = (cmd) => {
     setTerminalInput(cmd);
@@ -377,10 +456,16 @@ const HeroSection = () => {
     }, 10);
   };
 
-  // Hand-drawn line component with smooth transitions
+  // Handle resume download
+  const handleResumeDownload = () => {
+    if (content.resume) {
+      window.open(content.resume, "_blank");
+    }
+  };
+
+  // Hand-drawn line component
   const HandDrawnBorder = ({ isActive, color = "white" }) => (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {/* Top border with hand-drawn effect */}
       <svg
         className="absolute top-0 left-0 w-full h-1 transition-all duration-500 ease-in-out"
         viewBox="0 0 100 1"
@@ -397,7 +482,6 @@ const HeroSection = () => {
           className="transition-all duration-500 ease-in-out"
         />
       </svg>
-      {/* Right border */}
       <svg
         className="absolute top-0 right-0 w-1 h-full transition-all duration-500 ease-in-out"
         viewBox="0 0 1 100"
@@ -414,7 +498,6 @@ const HeroSection = () => {
           className="transition-all duration-500 ease-in-out"
         />
       </svg>
-      {/* Bottom border */}
       <svg
         className="absolute bottom-0 left-0 w-full h-1 transition-all duration-500 ease-in-out"
         viewBox="0 0 100 1"
@@ -431,7 +514,6 @@ const HeroSection = () => {
           className="transition-all duration-500 ease-in-out"
         />
       </svg>
-      {/* Left border */}
       <svg
         className="absolute top-0 left-0 w-1 h-full transition-all duration-500 ease-in-out"
         viewBox="0 0 1 100"
@@ -451,10 +533,9 @@ const HeroSection = () => {
     </div>
   );
 
-  // Hand-drawn corner accents with smooth transitions
+  // Hand-drawn corner accents
   const HandDrawnCorners = ({ isActive, size = "sm" }) => (
     <>
-      {/* Top-left corner */}
       <div className="absolute top-1 left-1 transition-all duration-500 ease-in-out">
         <svg
           width={size === "sm" ? "12" : "16"}
@@ -473,7 +554,6 @@ const HeroSection = () => {
           />
         </svg>
       </div>
-      {/* Top-right corner */}
       <div className="absolute top-1 right-1 transition-all duration-500 ease-in-out">
         <svg
           width={size === "sm" ? "12" : "16"}
@@ -492,7 +572,6 @@ const HeroSection = () => {
           />
         </svg>
       </div>
-      {/* Bottom-left corner */}
       <div className="absolute bottom-1 left-1 transition-all duration-500 ease-in-out">
         <svg
           width={size === "sm" ? "12" : "16"}
@@ -511,7 +590,6 @@ const HeroSection = () => {
           />
         </svg>
       </div>
-      {/* Bottom-right corner */}
       <div className="absolute bottom-1 right-1 transition-all duration-500 ease-in-out">
         <svg
           width={size === "sm" ? "12" : "16"}
@@ -533,7 +611,7 @@ const HeroSection = () => {
     </>
   );
 
-  // Hand-drawn underline effect for text with smooth transitions
+  // Hand-drawn underline effect
   const HandDrawnUnderline = ({ isActive, showTransition = true }) => (
     <motion.div
       className="absolute -bottom-1 left-0 right-0 h-px overflow-hidden"
@@ -558,17 +636,22 @@ const HeroSection = () => {
     </motion.div>
   );
 
+  // Render loading state
+  if (loading) {
+    return (
+      <div className="relative min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen bg-black overflow-hidden">
-      {/* Dudle-style Matrix Background */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full opacity-15 transition-opacity duration-1000 ease-in-out"
-        style={{ position: "fixed" }}
-      />
+      {/* Matrix Background as separate component */}
+      <MatrixBackground />
 
       {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black transition-all duration-1000 ease-in-out" />
+      <div className="fixed inset-0 bg-gradient-to-b from-transparent via-black/30 to-black transition-all duration-1000 ease-in-out z-1" />
 
       {/* Pen Tool Floating Icon */}
       <motion.div
@@ -585,7 +668,7 @@ const HeroSection = () => {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full">
           {/* Left Column - Interactive Terminal & Info */}
           <div className="space-y-6 lg:space-y-8">
-            {/* Interactive Terminal - Dudle Style with Hand-drawn Effect */}
+            {/* Interactive Terminal */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -598,11 +681,10 @@ const HeroSection = () => {
                 setIsHovered((prev) => ({ ...prev, terminal: false }));
               }}
             >
-              {/* Hand-drawn border effect */}
               <HandDrawnBorder isActive={hoverState.terminal} />
               <HandDrawnCorners isActive={hoverState.terminal} />
 
-              {/* Terminal Header - Minimalist */}
+              {/* Terminal Header */}
               <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-black/80 relative transition-all duration-500 ease-in-out">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -669,7 +751,7 @@ const HeroSection = () => {
                 </div>
               </div>
 
-              {/* Terminal Content */}
+              {/* Terminal Content with auto-scroll */}
               <div className="p-4 sm:p-6 font-mono transition-all duration-300 ease-in-out">
                 <div className="h-48 sm:h-64 overflow-y-auto mb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent transition-all duration-300 ease-in-out">
                   <div className="space-y-1 transition-all duration-300 ease-in-out">
@@ -683,7 +765,6 @@ const HeroSection = () => {
                         }`}
                       >
                         {item.text}
-                        {/* Hand-drawn cursor effect for current input */}
                         {item.type === "input" &&
                           index === terminalHistory.length - 1 && (
                             <motion.span
@@ -698,6 +779,7 @@ const HeroSection = () => {
                           )}
                       </div>
                     ))}
+                    {/* This div triggers the auto-scroll */}
                     <div ref={terminalEndRef} />
                   </div>
                 </div>
@@ -736,7 +818,6 @@ const HeroSection = () => {
                     }}
                     className="w-1 h-4 sm:w-2 sm:h-5 bg-white/60 relative transition-all duration-300 ease-in-out"
                   >
-                    {/* Hand-drawn arrow indicator */}
                     <svg
                       className="absolute -top-2 left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-in-out"
                       width="8"
@@ -753,7 +834,7 @@ const HeroSection = () => {
                   </motion.div>
                 </div>
 
-                {/* Quick Commands - Minimalist with hand-drawn effects */}
+                {/* Quick Commands */}
                 <div className="flex flex-wrap gap-2 mt-4 transition-all duration-300 ease-in-out">
                   {["help", "about", "skills", "projects"].map((cmd) => (
                     <motion.button
@@ -770,7 +851,6 @@ const HeroSection = () => {
                       }}
                     >
                       {cmd}
-                      {/* Hand-drawn squiggle underline on hover */}
                       <motion.div
                         className="absolute -bottom-1 left-0 right-0 h-px overflow-hidden"
                         initial={{ scaleX: 0 }}
@@ -802,7 +882,7 @@ const HeroSection = () => {
               </div>
             </motion.div>
 
-            {/* Quick Info Cards - Dudle Style with Hand-drawn Effects */}
+            {/* Quick Info Cards */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -845,7 +925,6 @@ const HeroSection = () => {
                     }));
                   }}
                 >
-                  {/* Hand-drawn corner accents */}
                   <HandDrawnCorners
                     isActive={hoverState[`card${index}`]}
                     size="sm"
@@ -870,7 +949,7 @@ const HeroSection = () => {
             </motion.div>
           </div>
 
-          {/* Right Column - Profile & Details - Dudle Style */}
+          {/* Right Column - Profile & Details */}
           <div className="space-y-6 lg:space-y-8 transition-all duration-300 ease-in-out">
             {/* Profile Header */}
             <motion.div
@@ -878,7 +957,7 @@ const HeroSection = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
             >
-              {/* Status Badge - Minimalist with hand-drawn effect */}
+              {/* Status Badge */}
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -921,11 +1000,11 @@ const HeroSection = () => {
                 </span>
               </motion.div>
 
-              {/* Name & Title - Dudle Typography with hand-drawn underline */}
+              {/* Name & Title */}
               <div className="relative transition-all duration-300 ease-in-out">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 tracking-tight transition-all duration-300 ease-in-out">
                   <span className="block text-white relative inline-block transition-all duration-300 ease-in-out">
-                    ALEX JOHNSON
+                    {content.name}
                     <motion.div
                       className="absolute -bottom-2 left-0 right-0 transition-all duration-300 ease-in-out"
                       initial={{ scaleX: 0 }}
@@ -954,19 +1033,17 @@ const HeroSection = () => {
                     </motion.div>
                   </span>
                   <span className="block text-white/90 text-2xl sm:text-3xl lg:text-4xl mt-6 font-normal tracking-wider transition-all duration-300 ease-in-out">
-                    FULL STACK DEVELOPER
+                    {content.title}
                   </span>
                 </h1>
               </div>
 
               <p className="text-white/70 text-base sm:text-lg mb-6 leading-relaxed font-light tracking-wide transition-all duration-300 ease-in-out">
-                Building scalable web applications with modern technologies.
-                Passionate about clean code, user experience, and solving
-                complex problems with elegant solutions.
+                {content.description}
               </p>
             </motion.div>
 
-            {/* Profile Photo & Tech Stack - Minimalist with hand-drawn border */}
+            {/* Profile Photo & Tech Stack */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -982,14 +1059,18 @@ const HeroSection = () => {
               <HandDrawnBorder isActive={hoverState.profile} />
 
               <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 transition-all duration-300 ease-in-out">
-                {/* Profile Photo - Dudle Style with hand-drawn circle */}
+                {/* Profile Photo with Logo */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="relative group/photo transition-all duration-500 ease-in-out"
                 >
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-white/20 bg-gradient-to-br from-white/5 to-white/10 flex items-center justify-center group-hover/photo:border-white/40 transition-all duration-500 ease-in-out">
-                    <User className="w-8 h-8 sm:w-10 sm:h-10 text-white/80 group-hover/photo:text-white transition-colors duration-500 ease-in-out" />
+                  <div className="w-16 h-16 sm:w-30 sm:h-24 rounded-lg overflow-hidden border-2 border-white/20 bg-black flex items-center justify-center group-hover/photo:border-white/40 transition-all duration-500 ease-in-out ">
+                    <img
+                      src={logo}
+                      alt="Logo"
+                      className="w-full h-full object-contain filter brightness-0 invert group-hover/photo:scale-110 transition-all duration-500 ease-in-out"
+                    />
                   </div>
                   <motion.div
                     animate={{ scale: [1, 1.2, 1] }}
@@ -1000,32 +1081,9 @@ const HeroSection = () => {
                     }}
                     className="absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-white/60 rounded-full border-2 border-black transition-all duration-300 ease-in-out"
                   />
-                  {/* Hand-drawn circle around profile photo */}
-                  <svg
-                    className="absolute inset-0 w-full h-full transition-all duration-300 ease-in-out"
-                    viewBox="0 0 100 100"
-                  >
-                    <motion.circle
-                      cx="50"
-                      cy="50"
-                      r="49"
-                      fill="none"
-                      stroke="white"
-                      strokeWidth="0.5"
-                      strokeOpacity="0.3"
-                      strokeDasharray="5,3"
-                      animate={{ rotate: hoverState.profile ? 360 : 0 }}
-                      transition={{
-                        duration: 20,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                      className="transition-all duration-300 ease-in-out"
-                    />
-                  </svg>
                 </motion.div>
 
-                {/* Tech Icons - Minimalist Grid with hand-drawn effects */}
+                {/* Tech Icons */}
                 <div className="flex-1 w-full transition-all duration-300 ease-in-out">
                   <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4 justify-center sm:justify-start transition-all duration-300 ease-in-out">
                     {[
@@ -1078,7 +1136,6 @@ const HeroSection = () => {
                           <tech.Icon
                             className={`w-4 h-4 sm:w-5 sm:h-5 ${tech.color} group-hover/tech:text-white transition-colors duration-500 ease-in-out`}
                           />
-                          {/* Hand-drawn squiggle around tech icon on hover */}
                           <motion.svg
                             className="absolute inset-0 w-full h-full transition-all duration-500 ease-in-out"
                             viewBox="0 0 100 100"
@@ -1106,7 +1163,6 @@ const HeroSection = () => {
                         <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover/tech:opacity-100 transition-all duration-500 ease-in-out pointer-events-none">
                           <span className="text-xs bg-black text-white/90 px-2 py-1 rounded border border-white/10 whitespace-nowrap relative transition-all duration-300 ease-in-out">
                             {tech.name}
-                            {/* Hand-drawn arrow pointing to icon */}
                             <svg
                               className="absolute -top-2 left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-in-out"
                               width="8"
@@ -1130,7 +1186,7 @@ const HeroSection = () => {
               </div>
             </motion.div>
 
-            {/* CTA Buttons - Dudle Style with hand-drawn effects */}
+            {/* CTA Buttons */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1148,7 +1204,6 @@ const HeroSection = () => {
                   setIsHovered((prev) => ({ ...prev, portfolioBtn: false }));
                 }}
               >
-                {/* Hand-drawn scribble effect on hover */}
                 <motion.div
                   className="absolute inset-0 transition-all duration-500 ease-in-out"
                   initial={{ opacity: 0 }}
@@ -1179,30 +1234,31 @@ const HeroSection = () => {
                 </span>
               </motion.button>
 
+              {/* Resume Button - Added */}
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={handleResumeDownload}
                 className="group relative px-5 sm:px-6 py-2.5 sm:py-3 bg-transparent border border-white/30 rounded-xl font-bold text-white overflow-hidden transition-all duration-500 ease-in-out hover:border-white hover:bg-white/5 flex-1 min-w-[140px]"
                 onMouseEnter={() => {
-                  setIsHovered((prev) => ({ ...prev, contactBtn: true }));
+                  setIsHovered((prev) => ({ ...prev, resumeBtn: true }));
                 }}
                 onMouseLeave={() => {
-                  setIsHovered((prev) => ({ ...prev, contactBtn: false }));
+                  setIsHovered((prev) => ({ ...prev, resumeBtn: false }));
                 }}
               >
-                {/* Hand-drawn border animation on hover */}
                 <HandDrawnBorder
-                  isActive={hoverState.contactBtn}
+                  isActive={hoverState.resumeBtn}
                   color="rgba(255,255,255,0.8)"
                 />
                 <span className="flex items-center justify-center gap-2 tracking-wide transition-all duration-300 ease-in-out">
-                  <Mail className="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ease-in-out" />
-                  CONTACT ME
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ease-in-out" />
+                  RESUME
                 </span>
               </motion.button>
             </motion.div>
 
-            {/* Social Links - Minimalist with hand-drawn circles */}
+            {/* Social Links */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1213,16 +1269,24 @@ const HeroSection = () => {
                 {
                   icon: Github,
                   label: "GitHub",
+                  href: content.social.github,
                 },
                 {
                   icon: Linkedin,
                   label: "LinkedIn",
+                  href: content.social.linkedin,
                 },
-                { icon: Mail, label: "Email" },
+                {
+                  icon: Mail,
+                  label: "Email",
+                  href: `mailto:${content.social.email}`,
+                },
               ].map((social, index) => (
                 <motion.a
                   key={social.label}
-                  href="#"
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   whileHover={{ scale: 1.1, y: -5 }}
                   whileTap={{ scale: 0.95 }}
                   className="p-2.5 sm:p-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white/60 hover:text-white hover:border-white/30 transition-all duration-500 ease-in-out hover:bg-white/10 relative group/social"
@@ -1237,7 +1301,6 @@ const HeroSection = () => {
                   }}
                 >
                   <social.icon className="w-5 h-5 transition-all duration-300 ease-in-out" />
-                  {/* Hand-drawn circle animation */}
                   <motion.svg
                     className="absolute inset-0 w-full h-full transition-all duration-500 ease-in-out"
                     viewBox="0 0 100 100"
@@ -1264,14 +1327,13 @@ const HeroSection = () => {
               ))}
             </motion.div>
 
-            {/* Stats - Dudle Style with hand-drawn dividers */}
+            {/* Stats */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
               className="grid grid-cols-3 gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-white/10 relative transition-all duration-300 ease-in-out"
             >
-              {/* Hand-drawn vertical dividers */}
               <div className="absolute top-1/2 left-1/3 transform -translate-x-1/2 -translate-y-1/2 h-8 w-px bg-white/10 transition-all duration-300 ease-in-out">
                 <svg
                   width="1"
@@ -1309,13 +1371,13 @@ const HeroSection = () => {
 
               {[
                 {
-                  value: "50+",
+                  value: content.projectCount,
                   label: "PROJECTS",
                   icon: FileCode,
                   color: "text-white/90",
                 },
                 {
-                  value: "3+",
+                  value: content.experienceYears,
                   label: "YEARS",
                   icon: Briefcase,
                   color: "text-white/70",
@@ -1349,7 +1411,6 @@ const HeroSection = () => {
                     <stat.icon
                       className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color} group-hover/stat:text-white relative z-10 transition-colors duration-500 ease-in-out`}
                     />
-                    {/* Hand-drawn circle around icon */}
                     <motion.div
                       className="absolute inset-0 transition-all duration-300 ease-in-out"
                       animate={{
@@ -1394,7 +1455,7 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Scroll Indicator - Minimalist with hand-drawn arrow */}
+      {/* Scroll Indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -1414,7 +1475,6 @@ const HeroSection = () => {
             }}
             className="flex flex-col items-center relative transition-all duration-300 ease-in-out"
           >
-            {/* Hand-drawn arrow with squiggle tail */}
             <svg
               width="40"
               height="40"
@@ -1433,7 +1493,6 @@ const HeroSection = () => {
               />
             </svg>
             <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white/50 rotate-90 relative z-10 transition-all duration-300 ease-in-out" />
-            {/* Hand-drawn circle around arrow */}
             <svg
               className="absolute inset-0 w-full h-full transition-all duration-300 ease-in-out"
               viewBox="0 0 40 40"

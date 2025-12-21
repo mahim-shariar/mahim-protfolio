@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Quote,
   Star,
@@ -9,11 +9,80 @@ import {
   Terminal,
   MessageSquare,
 } from "lucide-react";
+import { useApi } from "../hooks/useApi";
 
 const TestimonialsSection = () => {
   const [isHovered, setIsHovered] = useState({});
   const [isInView, setIsInView] = useState(false);
   const sectionRef = useRef(null);
+  const api = useApi();
+
+  const [reviews, setReviews] = useState([]);
+
+  // Fetch reviews data from API
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await api.get("/reviews");
+        setReviews(response.data || []);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+        // Fallback to default testimonials if API fails
+        setReviews([
+          {
+            _id: "1",
+            clientName: "Alex Chen",
+            company: "CTO at TechForward Inc.",
+            quote:
+              "Absolutely transformative work! The attention to detail and technical excellence delivered results that exceeded all our expectations.",
+            stars: 5,
+          },
+          {
+            _id: "2",
+            clientName: "Sarah Johnson",
+            company: "Product Manager at DesignHub",
+            quote:
+              "Working together was a game-changer for our platform. The intuitive UI/UX designs improved user engagement by 45%.",
+            stars: 5,
+          },
+          {
+            _id: "3",
+            clientName: "Michael Rodriguez",
+            company: "CEO at StartupScale",
+            quote:
+              "The technical architecture implemented for our scaling needs was brilliant. We've grown 3x without any performance issues.",
+            stars: 5,
+          },
+          {
+            _id: "4",
+            clientName: "Emma Williams",
+            company: "Lead Developer at CloudNine",
+            quote:
+              "The code quality and documentation were impeccable. Easy to maintain and extend. Our team learned so much.",
+            stars: 5,
+          },
+          {
+            _id: "5",
+            clientName: "David Kim",
+            company: "Head of Marketing at BrandSync",
+            quote:
+              "The responsive redesign boosted our mobile conversion rate by 60%. The animations created an engaging experience.",
+            stars: 5,
+          },
+          {
+            _id: "6",
+            clientName: "Lisa Wang",
+            company: "Operations Director at GlobalTech",
+            quote:
+              "Outstanding strategic guidance during our digital transformation. The technical roadmaps empowered our engineers.",
+            stars: 5,
+          },
+        ]);
+      }
+    };
+
+    fetchReviews();
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -39,51 +108,6 @@ const TestimonialsSection = () => {
       }
     };
   }, []);
-
-  const testimonials = [
-    {
-      id: 1,
-      name: "Alex Chen",
-      title: "CTO at TechForward Inc.",
-      quote:
-        "Absolutely transformative work! The attention to detail and technical excellence delivered results that exceeded all our expectations.",
-    },
-    {
-      id: 2,
-      name: "Sarah Johnson",
-      title: "Product Manager at DesignHub",
-      quote:
-        "Working together was a game-changer for our platform. The intuitive UI/UX designs improved user engagement by 45%.",
-    },
-    {
-      id: 3,
-      name: "Michael Rodriguez",
-      title: "CEO at StartupScale",
-      quote:
-        "The technical architecture implemented for our scaling needs was brilliant. We've grown 3x without any performance issues.",
-    },
-    {
-      id: 4,
-      name: "Emma Williams",
-      title: "Lead Developer at CloudNine",
-      quote:
-        "The code quality and documentation were impeccable. Easy to maintain and extend. Our team learned so much.",
-    },
-    {
-      id: 5,
-      name: "David Kim",
-      title: "Head of Marketing at BrandSync",
-      quote:
-        "The responsive redesign boosted our mobile conversion rate by 60%. The animations created an engaging experience.",
-    },
-    {
-      id: 6,
-      name: "Lisa Wang",
-      title: "Operations Director at GlobalTech",
-      quote:
-        "Outstanding strategic guidance during our digital transformation. The technical roadmaps empowered our engineers.",
-    },
-  ];
 
   const HandDrawnBorder = ({ isActive, color = "white", className = "" }) => (
     <div
@@ -191,12 +215,19 @@ const TestimonialsSection = () => {
         <Star
           key={i}
           className={`w-3 h-3 ${
-            i < rating ? "fill-white text-white" : "text-white/20"
+            i < (rating || 5) ? "fill-white text-white" : "text-white/20"
           }`}
         />
       ))}
     </div>
   );
+
+  // For marquee effect, we need to duplicate the reviews array
+  const topMarqueeReviews = reviews.length > 0 ? [...reviews, ...reviews] : [];
+  const bottomMarqueeReviews =
+    reviews.length > 0
+      ? [...reviews.slice().reverse(), ...reviews.slice().reverse()]
+      : [];
 
   return (
     <div
@@ -280,17 +311,16 @@ const TestimonialsSection = () => {
           </motion.div>
         </motion.div>
 
-        {/* SIMPLIFIED FIX: Put quote icons INSIDE the card with proper positioning */}
+        {/* Top Marquee - Left to Right */}
         <div className="space-y-12">
-          {/* Top Marquee - Left to Right */}
           <div className="relative overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none" />
 
             <div className="flex animate-marquee-left hover:animation-paused">
-              {[...testimonials, ...testimonials].map((testimonial, index) => (
+              {topMarqueeReviews.map((review, index) => (
                 <motion.div
-                  key={`top-${testimonial.id}-${index}`}
+                  key={`top-${review._id || index}-${index}`}
                   className="flex-shrink-0 w-80 mx-4"
                   whileHover={{ y: -5 }}
                   transition={{ duration: 0.3 }}
@@ -300,33 +330,33 @@ const TestimonialsSection = () => {
                     onMouseEnter={() =>
                       setIsHovered((prev) => ({
                         ...prev,
-                        [`top-${testimonial.id}`]: true,
+                        [`top-${review._id || index}`]: true,
                       }))
                     }
                     onMouseLeave={() =>
                       setIsHovered((prev) => ({
                         ...prev,
-                        [`top-${testimonial.id}`]: false,
+                        [`top-${review._id || index}`]: false,
                       }))
                     }
                   >
                     <HandDrawnBorder
-                      isActive={isHovered[`top-${testimonial.id}`]}
+                      isActive={isHovered[`top-${review._id || index}`]}
                     />
 
-                    {/* SIMPLE QUOTE ICON - INSIDE THE CARD */}
+                    {/* QUOTE ICON */}
                     <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center mb-4">
                       <Quote className="w-4 h-4 text-white/80" />
                     </div>
 
                     {/* Stars */}
                     <div className="mb-4 flex">
-                      <StarRating rating={5} />
+                      <StarRating rating={review.stars} />
                     </div>
 
                     {/* Quote Text */}
                     <p className="text-white/70 text-sm italic mb-6 leading-relaxed line-clamp-3">
-                      "{testimonial.quote}"
+                      "{review.quote}"
                     </p>
 
                     {/* Client Info */}
@@ -336,10 +366,10 @@ const TestimonialsSection = () => {
                       </div>
                       <div>
                         <h4 className="text-white font-medium text-sm">
-                          {testimonial.name}
+                          {review.clientName}
                         </h4>
                         <p className="text-white/40 text-xs">
-                          {testimonial.title}
+                          {review.company}
                         </p>
                       </div>
                     </div>
@@ -355,12 +385,9 @@ const TestimonialsSection = () => {
             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none" />
 
             <div className="flex animate-marquee-right hover:animation-paused">
-              {[
-                ...testimonials.slice().reverse(),
-                ...testimonials.slice().reverse(),
-              ].map((testimonial, index) => (
+              {bottomMarqueeReviews.map((review, index) => (
                 <motion.div
-                  key={`bottom-${testimonial.id}-${index}`}
+                  key={`bottom-${review._id || index}-${index}`}
                   className="flex-shrink-0 w-80 mx-4"
                   whileHover={{ y: -5 }}
                   transition={{ duration: 0.3 }}
@@ -370,21 +397,21 @@ const TestimonialsSection = () => {
                     onMouseEnter={() =>
                       setIsHovered((prev) => ({
                         ...prev,
-                        [`bottom-${testimonial.id}`]: true,
+                        [`bottom-${review._id || index}`]: true,
                       }))
                     }
                     onMouseLeave={() =>
                       setIsHovered((prev) => ({
                         ...prev,
-                        [`bottom-${testimonial.id}`]: false,
+                        [`bottom-${review._id || index}`]: false,
                       }))
                     }
                   >
                     <HandDrawnBorder
-                      isActive={isHovered[`bottom-${testimonial.id}`]}
+                      isActive={isHovered[`bottom-${review._id || index}`]}
                     />
 
-                    {/* SIMPLE QUOTE ICON - INSIDE THE CARD (Different style for bottom row) */}
+                    {/* HEADER */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <Building className="w-4 h-4 text-white/40" />
@@ -399,7 +426,7 @@ const TestimonialsSection = () => {
 
                     {/* Quote Text */}
                     <p className="text-white/70 text-sm mb-6 leading-relaxed line-clamp-3">
-                      "{testimonial.quote}"
+                      "{review.quote}"
                     </p>
 
                     {/* Client Info */}
@@ -407,19 +434,21 @@ const TestimonialsSection = () => {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center">
                           <span className="text-white/80 text-xs font-mono">
-                            {testimonial.name
-                              .split(" ")
+                            {review.clientName
+                              ?.split(" ")
                               .map((n) => n[0])
-                              .join("")}
+                              .join("") || "CN"}
                           </span>
                         </div>
                         <div>
                           <h4 className="text-white font-medium text-sm">
-                            {testimonial.name}
+                            {review.clientName}
                           </h4>
                           <div className="flex items-center gap-1">
                             <Star className="w-3 h-3 fill-white text-white" />
-                            <span className="text-white/40 text-xs">5.0</span>
+                            <span className="text-white/40 text-xs">
+                              {review.stars || 5}.0
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -475,7 +504,9 @@ const TestimonialsSection = () => {
 
               <div className="flex items-center gap-8">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-1">50+</div>
+                  <div className="text-3xl font-bold text-white mb-1">
+                    {reviews.length || 6}+
+                  </div>
                   <div className="text-white/40 text-sm">Happy Clients</div>
                 </div>
                 <div className="h-12 w-px bg-white/10" />

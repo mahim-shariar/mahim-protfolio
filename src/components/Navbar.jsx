@@ -8,7 +8,8 @@ import {
   Briefcase,
   MessageSquare,
   Calendar,
-  Sparkles,
+  LogOut,
+  LayoutDashboard,
   ChevronDown,
 } from "lucide-react";
 
@@ -19,8 +20,26 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const mobileMenuRef = useRef(null);
   const mobileMenuButtonRef = useRef(null);
+  const profileMenuRef = useRef(null);
+
+  // Check for token in localStorage on mount and when storage changes
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem("adminToken");
+      setIsLoggedIn(!!token);
+    };
+
+    checkAuthStatus();
+
+    // Listen for storage changes (like when token is set/removed in other components)
+    window.addEventListener("storage", checkAuthStatus);
+
+    return () => window.removeEventListener("storage", checkAuthStatus);
+  }, []);
 
   // Handle scroll effects
   useEffect(() => {
@@ -50,6 +69,7 @@ const Navbar = () => {
   // Close mobile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
+      // Close mobile menu
       if (
         mobileMenuRef.current &&
         !mobileMenuRef.current.contains(e.target) &&
@@ -57,6 +77,15 @@ const Navbar = () => {
         !mobileMenuButtonRef.current.contains(e.target)
       ) {
         setIsMobileMenuOpen(false);
+      }
+
+      // Close profile menu
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(e.target) &&
+        !e.target.closest(".profile-button")
+      ) {
+        setShowProfileMenu(false);
       }
     };
 
@@ -82,25 +111,12 @@ const Navbar = () => {
       label: "Services",
       icon: Briefcase,
       href: "#services",
-      hasDropdown: true,
-      dropdownItems: [
-        { label: "Web Development", href: "#services" },
-        { label: "UI/UX Design", href: "#services" },
-        { label: "Web Animation", href: "#services" },
-        { label: "Full-Stack Projects", href: "#services" },
-      ],
     },
     {
       id: "testimonials",
       label: "Testimonials",
       icon: MessageSquare,
       href: "#testimonials",
-    },
-    {
-      id: "contact",
-      label: "Contact",
-      icon: Calendar,
-      href: "#contact",
     },
   ];
 
@@ -117,6 +133,20 @@ const Navbar = () => {
       });
     }
     setIsMobileMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminToken");
+    setIsLoggedIn(false);
+    setShowProfileMenu(false);
+    // You might want to redirect to home page or trigger a refresh
+    window.location.href = "/"; // Or use your router's navigation
+  };
+
+  const handleDashboard = () => {
+    // Navigate to dashboard
+    window.location.href = "/dashboard"; // Or use your router's navigation
+    setShowProfileMenu(false);
   };
 
   // Hand-drawn border component
@@ -222,14 +252,6 @@ const Navbar = () => {
                           {item.label}
                         </span>
 
-                        {item.hasDropdown && (
-                          <ChevronDown
-                            className={`w-3 h-3 transition-transform duration-300 ${
-                              hoveredItem === item.id ? "rotate-180" : ""
-                            }`}
-                          />
-                        )}
-
                         {/* Active indicator */}
                         {isActive && (
                           <motion.div
@@ -239,45 +261,69 @@ const Navbar = () => {
                         )}
                       </div>
                     </motion.button>
-
-                    {/* Dropdown for Services */}
-                    {item.hasDropdown && hoveredItem === item.id && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="absolute left-0 top-full mt-2 w-48 z-50"
-                      >
-                        <div className="relative bg-black/90 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
-                          <HandDrawnBorder isActive={true} />
-
-                          <div className="p-2">
-                            {item.dropdownItems.map((dropdownItem, index) => (
-                              <motion.a
-                                key={index}
-                                href={dropdownItem.href}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  scrollToSection(dropdownItem.href);
-                                }}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300 group/item"
-                              >
-                                <Sparkles className="w-3 h-3 text-white/40 group-hover/item:text-white transition-colors duration-300" />
-                                <span className="text-sm">
-                                  {dropdownItem.label}
-                                </span>
-                              </motion.a>
-                            ))}
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
                   </div>
                 );
               })}
+
+              {/* Profile Button (only show if logged in) */}
+              {isLoggedIn && (
+                <div className="relative" ref={profileMenuRef}>
+                  <motion.button
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="ml-2 relative profile-button"
+                  >
+                    <div className="relative px-4 py-2 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 transition-all duration-300 flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      <span>Profile</span>
+                      <ChevronDown
+                        className={`w-3 h-3 transition-transform duration-300 ${
+                          showProfileMenu ? "rotate-180" : ""
+                        }`}
+                      />
+                    </div>
+                  </motion.button>
+
+                  {/* Profile Dropdown Menu */}
+                  {showProfileMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 top-full mt-2 w-48 z-50"
+                    >
+                      <div className="relative bg-black/90 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+                        <HandDrawnBorder isActive={true} />
+
+                        <div className="p-2">
+                          <motion.button
+                            onClick={handleDashboard}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.05 }}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300 group/item"
+                          >
+                            <LayoutDashboard className="w-3 h-3 text-white/40 group-hover/item:text-white transition-colors duration-300" />
+                            <span className="text-sm">Dashboard</span>
+                          </motion.button>
+
+                          <motion.button
+                            onClick={handleLogout}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-400/80 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 group/item"
+                          >
+                            <LogOut className="w-3 h-3 text-red-400/60 group-hover/item:text-red-300 transition-colors duration-300" />
+                            <span className="text-sm">Logout</span>
+                          </motion.button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              )}
 
               {/* CTA Button */}
               <motion.button
@@ -297,23 +343,35 @@ const Navbar = () => {
             </div>
 
             {/* Mobile Menu Button - Fixed with proper ref */}
-            <button
-              ref={mobileMenuButtonRef}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden relative w-10 h-10 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-white hover:border-white/30 transition-all duration-300 menu-button z-50"
-            >
-              {isMobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
+            <div className="flex items-center gap-2 md:hidden">
+              {/* Profile button for mobile (only show if logged in) */}
+              {isLoggedIn && (
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="relative w-10 h-10 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-white hover:border-white/30 transition-all duration-300"
+                >
+                  <User className="w-5 h-5" />
+                </button>
               )}
 
-              {/* Terminal dots */}
-              <div className="absolute -top-1 -right-1 flex gap-0.5">
-                <div className="w-1 h-1 rounded-full bg-white/60" />
-                <div className="w-1 h-1 rounded-full bg-white/40" />
-              </div>
-            </button>
+              <button
+                ref={mobileMenuButtonRef}
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="relative w-10 h-10 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-white hover:border-white/30 transition-all duration-300 menu-button z-50"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
+
+                {/* Terminal dots */}
+                <div className="absolute -top-1 -right-1 flex gap-0.5">
+                  <div className="w-1 h-1 rounded-full bg-white/60" />
+                  <div className="w-1 h-1 rounded-full bg-white/40" />
+                </div>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -347,59 +405,62 @@ const Navbar = () => {
                       const isActive = activeSection === item.id;
 
                       return (
-                        <div key={item.id}>
-                          <motion.button
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.2 }}
-                            onClick={() => scrollToSection(item.href)}
-                            className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${
-                              isActive
-                                ? "bg-white/10 text-white"
-                                : "text-white/60 hover:text-white hover:bg-white/5"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Icon className="w-5 h-5" />
-                              <span className="font-medium">{item.label}</span>
-                            </div>
+                        <motion.button
+                          key={item.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.2 }}
+                          onClick={() => scrollToSection(item.href)}
+                          className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${
+                            isActive
+                              ? "bg-white/10 text-white"
+                              : "text-white/60 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon className="w-5 h-5" />
+                            <span className="font-medium">{item.label}</span>
+                          </div>
 
-                            {isActive && (
-                              <div className="w-2 h-2 rounded-full bg-white" />
-                            )}
-                          </motion.button>
-
-                          {/* Mobile dropdown items */}
-                          {item.hasDropdown && (
-                            <div className="ml-4 pl-8 border-l border-white/10 space-y-2 mt-2">
-                              {item.dropdownItems.map((dropdownItem, index) => (
-                                <motion.a
-                                  key={index}
-                                  href={dropdownItem.href}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    scrollToSection(dropdownItem.href);
-                                  }}
-                                  initial={{ opacity: 0, x: -10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: index * 0.05 }}
-                                  className="flex items-center gap-3 p-3 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300 text-sm"
-                                >
-                                  <div className="w-2 h-2 rounded-full bg-white/40" />
-                                  <span>{dropdownItem.label}</span>
-                                </motion.a>
-                              ))}
-                            </div>
+                          {isActive && (
+                            <div className="w-2 h-2 rounded-full bg-white" />
                           )}
-                        </div>
+                        </motion.button>
                       );
                     })}
+
+                    {/* Profile options for mobile (only show if logged in) */}
+                    {isLoggedIn && (
+                      <>
+                        <motion.button
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 }}
+                          onClick={handleDashboard}
+                          className="w-full flex items-center gap-3 p-4 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300"
+                        >
+                          <LayoutDashboard className="w-5 h-5" />
+                          <span className="font-medium">Dashboard</span>
+                        </motion.button>
+
+                        <motion.button
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.15 }}
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 p-4 rounded-xl text-red-400/80 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300"
+                        >
+                          <LogOut className="w-5 h-5" />
+                          <span className="font-medium">Logout</span>
+                        </motion.button>
+                      </>
+                    )}
 
                     {/* Mobile CTA */}
                     <motion.button
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
+                      transition={{ delay: 0.2 }}
                       onClick={() => scrollToSection("#contact")}
                       className="w-full mt-4 p-4 bg-white text-black font-bold rounded-xl hover:bg-white/90 transition-all duration-300 flex items-center justify-center gap-3"
                     >
@@ -407,6 +468,38 @@ const Navbar = () => {
                       <span>Book a Call</span>
                     </motion.button>
                   </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile Profile Menu (separate from main mobile menu) */}
+        <AnimatePresence>
+          {showProfileMenu && !isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="md:hidden absolute top-16 right-4 w-48 z-40"
+            >
+              <div className="relative bg-black/95 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+                <HandDrawnBorder isActive={true} />
+                <div className="p-2">
+                  <button
+                    onClick={handleDashboard}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span className="text-sm">Dashboard</span>
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-red-400/80 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="text-sm">Logout</span>
+                  </button>
                 </div>
               </div>
             </motion.div>

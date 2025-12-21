@@ -8,7 +8,6 @@ import ServicesSection from "../components/ServicesSection";
 import TestimonialsSection from "../components/TestimonialsSection";
 import ContactSection from "../components/ContactSection";
 import FooterSection from "../components/FooterSection";
-import Navbar from "../components/Navbar";
 
 const Home = () => {
   // Fix scroll position on initial load
@@ -32,15 +31,51 @@ const Home = () => {
 
   return (
     <div className="relative">
-      <HeroSection />
+      {/* Hero Section with id for navigation */}
+      <section id="home" className="scroll-mt-16">
+        <HeroSection />
+      </section>
+
       <div className="bg-black">
-        <SkillsSection />
-        <FeaturedProjects />
-        <AboutMeSection />
-        <ProcessSection />
-        <ServicesSection />
-        <TestimonialsSection />
-        <ContactSection />
+        {/* Skills Section */}
+        <section className="scroll-mt-16">
+          <SkillsSection />
+        </section>
+
+        {/* Featured Projects */}
+        <section className="scroll-mt-16">
+          <FeaturedProjects />
+        </section>
+
+        {/* About Section with id for navigation */}
+        <section id="about" className="scroll-mt-16">
+          <AboutMeSection />
+        </section>
+
+        {/* Process Section */}
+        <section className="scroll-mt-16">
+          <ProcessSection />
+        </section>
+
+        {/* Services Section with id for navigation */}
+        <section id="services" className="scroll-mt-16">
+          <ServicesSection />
+        </section>
+
+        {/* Testimonials Section with id for navigation */}
+        <section id="testimonials" className="scroll-mt-16">
+          <TestimonialsSection />
+        </section>
+
+        {/* Contact Section with id for navigation */}
+        <section id="contact" className="scroll-mt-16">
+          <ContactSection />
+        </section>
+
+        {/* Footer Section */}
+        <section className="scroll-mt-16">
+          <FooterSection />
+        </section>
       </div>
     </div>
   );

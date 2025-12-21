@@ -16,6 +16,8 @@ import {
   Bell,
   Database,
   Key,
+  Star,
+  CheckCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -28,12 +30,12 @@ const Dashboard = () => {
       id: "security",
       title: "Security & Privacy",
       description:
-        "Advanced security settings, encryption, and privacy controls for your account",
+        "Advanced security settings, encryption, and privacy controls",
       icon: Shield,
       accentIcon: Lock,
-      route: "/security",
+      route: "/dashboard/privacy",
       features: [
-        { text: "Two-factor authentication", icon: Shield },
+        { text: "Two-factor auth", icon: Shield },
         { text: "Data encryption", icon: Lock },
         { text: "Privacy controls", icon: Key },
       ],
@@ -42,11 +44,10 @@ const Dashboard = () => {
     {
       id: "projects",
       title: "Projects",
-      description:
-        "Manage all your projects, collaborations, and team workflows",
+      description: "Manage projects, collaborations, and team workflows",
       icon: FolderOpen,
       accentIcon: Briefcase,
-      route: "/projects",
+      route: "/dashboard/projects",
       features: [
         { text: "Active projects", icon: Briefcase },
         { text: "Team members", icon: User },
@@ -57,10 +58,10 @@ const Dashboard = () => {
     {
       id: "content",
       title: "Content",
-      description: "Create, edit, and organize your content and documents",
+      description: "Create, edit, and organize your content",
       icon: FileText,
       accentIcon: Edit3,
-      route: "/content",
+      route: "/dashboard/content",
       features: [
         { text: "Draft documents", icon: Edit3 },
         { text: "Published articles", icon: FileText },
@@ -69,18 +70,18 @@ const Dashboard = () => {
       stats: "47 Items",
     },
     {
-      id: "profile",
-      title: "Profile",
-      description: "Manage your personal information and account preferences",
-      icon: User,
-      accentIcon: UserCheck,
-      route: "/profile",
+      id: "review",
+      title: "Review",
+      description: "Track and manage reviews, feedback, and approvals",
+      icon: Star,
+      accentIcon: CheckCircle,
+      route: "/dashboard/review",
       features: [
-        { text: "Personal info", icon: UserCheck },
-        { text: "Account settings", icon: Settings },
-        { text: "Notifications", icon: Bell },
+        { text: "Pending reviews", icon: Star },
+        { text: "Completed feedback", icon: CheckCircle },
+        { text: "Review analytics", icon: UserCheck },
       ],
-      stats: "Complete",
+      stats: "8 Pending",
     },
   ];
 
@@ -215,7 +216,7 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
-      {/* Cards Grid */}
+      {/* Cards Grid - Updated to 2x2 grid on medium screens, 4 columns on large */}
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {cards.map((card, index) => {
@@ -246,7 +247,7 @@ const Dashboard = () => {
                 className="group relative cursor-pointer"
               >
                 {/* Main Card */}
-                <div className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 overflow-hidden transition-all duration-500 group-hover:border-white/20 h-full">
+                <div className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-5 overflow-hidden transition-all duration-500 group-hover:border-white/20 h-full flex flex-col">
                   {/* Hand-drawn Border */}
                   <HandDrawnBorder isActive={hoveredCard === card.id} />
 
@@ -257,15 +258,15 @@ const Dashboard = () => {
                   </div>
 
                   {/* Icon Section */}
-                  <div className="relative mb-6">
+                  <div className="relative mb-4">
                     <div className="relative">
-                      <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-all duration-500">
-                        <Icon className="w-7 h-7 text-white/80" />
+                      <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-all duration-500">
+                        <Icon className="w-6 h-6 text-white/80" />
                       </div>
 
                       {/* Accent Icon */}
                       <motion.div
-                        className="absolute -top-2 -right-2 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center"
+                        className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center"
                         animate={{
                           rotate: hoveredCard === card.id ? [0, 10, 0] : 0,
                         }}
@@ -275,28 +276,28 @@ const Dashboard = () => {
                           ease: "easeInOut",
                         }}
                       >
-                        <AccentIcon className="w-4 h-4 text-white/60" />
+                        <AccentIcon className="w-3.5 h-3.5 text-white/60" />
                       </motion.div>
                     </div>
                   </div>
 
                   {/* Content */}
-                  <div className="space-y-4">
+                  <div className="space-y-3 flex-1 flex flex-col">
                     {/* Title and Stats */}
-                    <div>
-                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-white/90 transition-colors duration-300">
+                    <div className="mb-2">
+                      <h3 className="text-lg font-bold text-white mb-1.5 group-hover:text-white/90 transition-colors duration-300">
                         {card.title}
                       </h3>
-                      <p className="text-white/60 text-sm leading-relaxed mb-3">
+                      <p className="text-white/60 text-xs leading-relaxed mb-2">
                         {card.description}
                       </p>
-                      <div className="inline-block px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/60">
+                      <div className="inline-block px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-white/60">
                         {card.stats}
                       </div>
                     </div>
 
                     {/* Features List */}
-                    <div className="space-y-3">
+                    <div className="space-y-2 flex-1">
                       {card.features.map((feature, idx) => {
                         const FeatureIcon = feature.icon;
                         return (
@@ -305,12 +306,12 @@ const Dashboard = () => {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.2 + idx * 0.1 }}
-                            className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 group-hover:border-white/10 transition-all duration-300"
+                            className="flex items-center gap-2 p-2 rounded-md bg-white/5 border border-white/5 group-hover:border-white/10 transition-all duration-300"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                              <FeatureIcon className="w-4 h-4 text-white/60" />
+                            <div className="w-7 h-7 rounded-md bg-white/5 flex items-center justify-center flex-shrink-0">
+                              <FeatureIcon className="w-3.5 h-3.5 text-white/60" />
                             </div>
-                            <span className="text-sm text-white/80">
+                            <span className="text-xs text-white/80 leading-tight">
                               {feature.text}
                             </span>
                           </motion.div>
@@ -319,13 +320,13 @@ const Dashboard = () => {
                     </div>
 
                     {/* CTA */}
-                    <div className="flex items-center justify-between pt-4 border-t border-white/5 group-hover:border-white/10 transition-all duration-300">
-                      <span className="text-sm text-white/40 group-hover:text-white/60 transition-colors duration-300">
+                    <div className="flex items-center justify-between pt-3 border-t border-white/5 group-hover:border-white/10 transition-all duration-300">
+                      <span className="text-xs text-white/40 group-hover:text-white/60 transition-colors duration-300">
                         Click to access
                       </span>
 
                       <motion.div
-                        className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-all duration-500"
+                        className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-all duration-500 flex-shrink-0"
                         animate={{
                           x: hoveredCard === card.id ? [0, 3, 0] : 0,
                         }}
@@ -335,13 +336,13 @@ const Dashboard = () => {
                           ease: "easeInOut",
                         }}
                       >
-                        <ArrowRight className="w-4 h-4 text-white/60 group-hover:text-white group-hover:translate-x-0.5 transition-all duration-300" />
+                        <ArrowRight className="w-3.5 h-3.5 text-white/60 group-hover:text-white group-hover:translate-x-0.5 transition-all duration-300" />
                       </motion.div>
                     </div>
                   </div>
 
                   {/* Hover Effect Line */}
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 group-hover:w-20 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent transition-all duration-500" />
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 group-hover:w-16 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent transition-all duration-500" />
                 </div>
 
                 {/* Subtle Hover Glow */}

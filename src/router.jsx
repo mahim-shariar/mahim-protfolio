@@ -3,10 +3,18 @@ import { Suspense, lazy } from "react";
 import LoadingSpinner from "./components/LoadingSpinner";
 import RootLayout from "./layouts/RootLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
-import Dashboard from "./dashboardComponents/Dashboard";
+
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const Home = lazy(() => import("./page/Home"));
 const Login = lazy(() => import("./page/Login"));
+const NotFoundPage = lazy(() => import("./components/NotFoundPage"));
+
+const Dashboard = lazy(() => import("./dashboardComponents/Dashboard"));
+const Projects = lazy(() => import("./page/dashboard/projects"));
+const Privacy = lazy(() => import("./page/dashboard/Privacy"));
+const Content = lazy(() => import("./page/dashboard/Content"));
+const Review = lazy(() => import("./page/dashboard/Review"));
 
 const router = createBrowserRouter([
   {
@@ -22,7 +30,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "login",
+        path: "login/jins@9242",
         element: (
           <Suspense fallback={<LoadingSpinner />}>
             <Login />
@@ -38,12 +46,62 @@ const router = createBrowserRouter([
       {
         index: true,
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <Dashboard />
-          </Suspense>
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner />}>
+              <Dashboard />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "projects",
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner />}>
+              <Projects />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "privacy",
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner />}>
+              <Privacy />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "content",
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner />}>
+              <Content />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "review",
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner />}>
+              <Review />
+            </Suspense>
+          </ProtectedRoute>
         ),
       },
     ],
+  },
+  {
+    path: "*",
+    element: (
+      <Suspense fallback={<LoadingSpinner />}>
+        <NotFoundPage />
+      </Suspense>
+    ),
   },
 ]);
 

@@ -73,25 +73,25 @@ const ContactSection = () => {
     {
       platform: "GitHub",
       icon: Github,
-      url: "https://github.com/yourusername",
+      url: "https://github.com/mahim-shariar",
       color: "hover:text-white",
     },
     {
       platform: "LinkedIn",
       icon: Linkedin,
-      url: "https://linkedin.com/in/yourusername",
+      url: "https://www.linkedin.com/in/md-mahim-7957381a7/",
       color: "hover:text-blue-400",
     },
     {
-      platform: "Twitter",
+      platform: "X",
       icon: Twitter,
-      url: "https://twitter.com/yourusername",
+      url: "https://x.com/Being_MsMahim",
       color: "hover:text-blue-300",
     },
     {
       platform: "Instagram",
       icon: Instagram,
-      url: "https://instagram.com/yourusername",
+      url: "https://www.instagram.com/being_mahimtalukder/",
       color: "hover:text-pink-400",
     },
   ];
@@ -586,7 +586,7 @@ const ContactSection = () => {
               {/* TidyCal Iframe */}
               <div className="flex-1 relative">
                 <iframe
-                  src="https://tidycal.com/yourusername"
+                  src="https://tidycal.com/mdmahim924214/30-minute-meeting"
                   title="TidyCal Booking Calendar"
                   className="w-full h-full border-0"
                   sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"
@@ -612,7 +612,7 @@ const ContactSection = () => {
                   <div className="flex items-center gap-2">
                     <ExternalLink className="w-4 h-4 text-white/40" />
                     <a
-                      href="https://tidycal.com/yourusername"
+                      href="https://tidycal.com/mdmahim924214/30-minute-meeting"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-white/60 hover:text-white transition-colors"

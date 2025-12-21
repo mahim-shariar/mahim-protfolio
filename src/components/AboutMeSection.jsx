@@ -27,9 +27,11 @@ import {
   Twitter,
   Mail,
   ExternalLink,
+  FileText,
 } from "lucide-react";
 import jhankhar_photo from "../assets/jhankhar_mahbub.jpeg";
 import profile from "../assets/my-profile.png";
+import { useApi } from "../hooks/useApi"; // Import your API hook
 
 const AboutMeSection = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,45 +39,35 @@ const AboutMeSection = () => {
   const [isInView, setIsInView] = useState(false);
   const sectionRef = useRef(null);
   const modalRef = useRef(null);
+  const [contentData, setContentData] = useState(null);
 
-  const certificate_link =
-    "https://drive.google.com/file/d/1EktLjsCYPTkZ-wP1qxW7VP8b3J_fNO19/view?usp=sharing";
+  // Use API hook for fetching content data
+  const { get: getContent, loading: contentLoading } = useApi();
 
-  const recomendation_letter =
-    "https://drive.google.com/file/d/1uvuGjGe9cLt02LSsVgifSHUf4l59cHk7/view?usp=sharing";
-
-  // Intersection Observer for smooth scroll animation
+  // Fetch content data on component mount
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      {
-        threshold: 0.1,
-        rootMargin: "0px 0px -100px 0px",
-      }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
+    const fetchContentData = async () => {
+      try {
+        const result = await getContent("/content");
+        const data = result?.data || {}; // Ensure data is not null
+        setContentData(data);
+      } catch (error) {
+        console.error("Error fetching content data:", error);
       }
     };
+
+    fetchContentData();
   }, []);
 
-  // Your personality and expertise data
+  // Your personality and expertise data - now populated from API
   const aboutData = {
-    name: "ALEX MORGAN",
-    title: "SENIOR FULL-STACK DEVELOPER",
+    name: contentData?.name || "ALEX MORGAN",
+    title: contentData?.title || "SENIOR FULL-STACK DEVELOPER",
     story:
-      "I build digital experiences that transform ideas into impactful reality. With over 7 years of crafting cutting-edge web applications, I blend technical precision with creative vision to deliver solutions that exceed expectations.",
+      contentData?.bio ||
+      `I build digital experiences that transform ideas into impactful reality. With over ${
+        contentData?.experienceYears || 3
+      } years of crafting cutting-edge web applications, I blend technical precision with creative vision to deliver solutions that exceed expectations.`,
     values: [
       {
         icon: Heart,
@@ -103,6 +95,16 @@ const AboutMeSection = () => {
         color: "text-green-400",
       },
     ],
+    socialLinks: {
+      github: contentData?.social?.github || "#",
+      linkedin: contentData?.social?.linkedin || "#",
+      twitter: contentData?.social?.twitter || "#",
+      email: "#", // You might want to add email to your API
+    },
+    certificates: contentData?.certificates || [],
+    resume: contentData?.resume || "",
+    experienceYears: contentData?.experienceYears || 0,
+    projectCount: contentData?.projectCount || 0,
   };
 
   // Journey story data for modal
@@ -154,31 +156,25 @@ const AboutMeSection = () => {
       {
         year: "Present",
         title: "Current Journey",
-        description:
-          "Working on real-world projects, continuously learning new technologies, and building my career in software development.",
+        description: `Working on real-world projects with ${
+          contentData?.experienceYears || 3
+        } years of experience, continuously learning new technologies, and building my career in software development.`,
         icon: Rocket,
         color: "from-cyan-500/20 to-teal-500/20",
       },
     ],
-    achievements: [
-      {
-        title: "Programming Hero Certificate",
-        description: "Completed full web development course with excellence",
-        date: "2022",
-        icon: Trophy,
-        link: certificate_link,
-        type: "certificate",
-      },
-      {
-        title: "Recommendation Letter",
-        description:
-          "Received special recommendation for outstanding performance during internship",
-        date: "2023",
-        icon: Award,
-        link: recomendation_letter,
-        type: "recommendation",
-      },
-    ],
+    achievements: aboutData.certificates.map((certificate, index) => ({
+      title:
+        index === 0 ? "Programming Hero Certificate" : "Recommendation Letter",
+      description:
+        index === 0
+          ? "Completed full web development course with excellence"
+          : "Received special recommendation for outstanding performance",
+      date: "2022-2023",
+      icon: FileText,
+      link: certificate,
+      type: "certificate",
+    })),
     mentors: [
       {
         name: "Jhankar Mahbub",
@@ -188,12 +184,39 @@ const AboutMeSection = () => {
       },
     ],
     currentWork: [
-      "Working at AK2 Technologies on real-world projects",
+      `Working with ${aboutData.experienceYears}+ years of experience`,
+      `Completed ${aboutData.projectCount}+ projects`,
       "Managing Trilance agency with co-founders",
       "Building modern web applications",
       "Continuously learning and growing",
     ],
   };
+
+  // Intersection Observer for smooth scroll animation
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "0px 0px -100px 0px",
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
 
   // Modal handlers
   const openModal = () => {
@@ -429,8 +452,46 @@ const AboutMeSection = () => {
 
   // Handle certificate/recommendation click
   const handleCertificateClick = (link) => {
-    window.open(link, "_blank");
+    if (link && link !== "#") {
+      window.open(link, "_blank");
+    }
   };
+
+  // Social links configuration
+  const socialLinksConfig = [
+    {
+      icon: Github,
+      label: "GitHub",
+      color: "text-white/60 hover:text-white",
+      href: aboutData.socialLinks.github,
+    },
+    {
+      icon: Linkedin,
+      label: "LinkedIn",
+      color: "text-white/60 hover:text-blue-400",
+      href: aboutData.socialLinks.linkedin,
+    },
+    {
+      icon: Twitter,
+      label: "Twitter",
+      color: "text-white/60 hover:text-cyan-400",
+      href: aboutData.socialLinks.twitter,
+    },
+    {
+      icon: Mail,
+      label: "Email",
+      color: "text-white/60 hover:text-red-400",
+      href: aboutData.socialLinks.email,
+    },
+  ];
+
+  // Journey highlights based on API data
+  const journeyHighlights = [
+    `Started with ${aboutData.experienceYears}+ years of experience`,
+    `Completed ${aboutData.projectCount}+ projects`,
+    "Mastered web development with dedication",
+    "Now building impactful digital solutions",
+  ];
 
   return (
     <div
@@ -549,12 +610,10 @@ const AboutMeSection = () => {
                 {/* Full-size Profile Image */}
                 <div className="relative flex-1 flex items-center mx-auto justify-center max-w-lg max-h-md p-6">
                   {/* Full-size Profile Image with white overlay */}
-
-                  {/* Your profile image - now full size */}
                   <img
                     src={profile}
-                    alt="Alex Morgan"
-                    className="w-full h-full object-cover "
+                    alt={aboutData.name}
+                    className="w-full h-full object-cover"
                   />
                 </div>
 
@@ -575,7 +634,7 @@ const AboutMeSection = () => {
             </div>
           </motion.div>
 
-          {/* Right Column: Story & Details (ORIGINAL - UNCHANGED) */}
+          {/* Right Column: Story & Details */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
@@ -612,12 +671,7 @@ const AboutMeSection = () => {
 
               {/* Journey Highlights */}
               <div className="space-y-4 mb-8">
-                {[
-                  "Started during COVID lockdown with my first computer",
-                  "Discovered programming through a cousin's inspiration",
-                  "Mastered web development with dedication",
-                  "Now building impactful digital solutions",
-                ].map((point, index) => (
+                {journeyHighlights.map((point, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, x: -20 }}
@@ -723,33 +777,14 @@ const AboutMeSection = () => {
               transition={{ delay: 0.7 }}
               className="flex justify-center gap-4"
             >
-              {[
-                {
-                  icon: Github,
-                  label: "GitHub",
-                  color: "text-white/60 hover:text-white",
-                },
-                {
-                  icon: Linkedin,
-                  label: "LinkedIn",
-                  color: "text-white/60 hover:text-blue-400",
-                },
-                {
-                  icon: Twitter,
-                  label: "Twitter",
-                  color: "text-white/60 hover:text-cyan-400",
-                },
-                {
-                  icon: Mail,
-                  label: "Email",
-                  color: "text-white/60 hover:text-red-400",
-                },
-              ].map((social, index) => {
+              {socialLinksConfig.map((social, index) => {
                 const Icon = social.icon;
                 return (
                   <motion.a
                     key={index}
-                    href="#"
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     initial={{ opacity: 0, scale: 0 }}
                     animate={isInView ? { opacity: 1, scale: 1 } : {}}
                     transition={{ delay: 0.8 + index * 0.1 }}
@@ -800,7 +835,7 @@ const AboutMeSection = () => {
         </motion.div>
       </motion.div>
 
-      {/* Journey Modal (ORIGINAL - UNCHANGED) */}
+      {/* Journey Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <>
@@ -956,50 +991,52 @@ const AboutMeSection = () => {
                         </div>
 
                         {/* Achievement Images Section */}
-                        <div className="mt-6">
-                          <h4 className="text-lg font-semibold text-white mb-4">
-                            Achievement Certificates
-                          </h4>
-                          <div className="grid grid-cols-2 gap-4">
-                            {/* Clickable certificate placeholders */}
-                            {journeyStory.achievements.map(
-                              (achievement, index) => (
-                                <motion.div
-                                  key={index}
-                                  initial={{ opacity: 0, scale: 0.9 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  transition={{ delay: 0.8 + index * 0.1 }}
-                                  className="relative aspect-video border border-white/10 rounded-lg overflow-hidden bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:from-blue-500/20 hover:to-purple-500/20 transition-all duration-300 group cursor-pointer"
-                                  onClick={() =>
-                                    handleCertificateClick(achievement.link)
-                                  }
-                                >
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="text-center">
-                                      <div className="text-4xl font-bold text-white/20 mb-2 group-hover:text-white/30 transition-colors duration-300">
-                                        {achievement.type === "certificate"
-                                          ? "CERT"
-                                          : "REC"}
-                                      </div>
-                                      <div className="text-xs text-white/40 group-hover:text-white/60 transition-colors duration-300">
-                                        {achievement.type === "certificate"
-                                          ? "Certificate"
-                                          : "Recommendation"}
+                        {journeyStory.achievements.length > 0 && (
+                          <div className="mt-6">
+                            <h4 className="text-lg font-semibold text-white mb-4">
+                              Achievement Certificates
+                            </h4>
+                            <div className="grid grid-cols-2 gap-4">
+                              {/* Clickable certificate placeholders */}
+                              {journeyStory.achievements.map(
+                                (achievement, index) => (
+                                  <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.8 + index * 0.1 }}
+                                    className="relative aspect-video border border-white/10 rounded-lg overflow-hidden bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:from-blue-500/20 hover:to-purple-500/20 transition-all duration-300 group cursor-pointer"
+                                    onClick={() =>
+                                      handleCertificateClick(achievement.link)
+                                    }
+                                  >
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="text-center">
+                                        <div className="text-4xl font-bold text-white/20 mb-2 group-hover:text-white/30 transition-colors duration-300">
+                                          {achievement.type === "certificate"
+                                            ? "CERT"
+                                            : "REC"}
+                                        </div>
+                                        <div className="text-xs text-white/40 group-hover:text-white/60 transition-colors duration-300">
+                                          {achievement.type === "certificate"
+                                            ? "Certificate"
+                                            : "Recommendation"}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                  <div className="absolute inset-0 border-2 border-dashed border-white/5 rounded-lg" />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                                    <div className="flex items-center gap-2 text-white/80 text-sm">
-                                      <span>Click to view</span>
-                                      <ExternalLink className="w-3 h-3" />
+                                    <div className="absolute inset-0 border-2 border-dashed border-white/5 rounded-lg" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
+                                      <div className="flex items-center gap-2 text-white/80 text-sm">
+                                        <span>Click to view</span>
+                                        <ExternalLink className="w-3 h-3" />
+                                      </div>
                                     </div>
-                                  </div>
-                                </motion.div>
-                              )
-                            )}
+                                  </motion.div>
+                                )
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* Mentor Section */}

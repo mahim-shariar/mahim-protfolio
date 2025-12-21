@@ -10,28 +10,20 @@ import {
   Terminal,
   Sparkles,
   ArrowRight,
-  Cpu,
   Shield,
-  Globe,
   Clock,
   Users,
-  ChevronRight,
-  CheckCircle,
   X,
-  ExternalLink,
-  Heart,
-  Target,
   BookOpen,
   Trophy,
-  Award,
   Calendar,
+  CheckCircle,
 } from "lucide-react";
 
 const ServicesSection = () => {
   const [isHovered, setIsHovered] = useState({});
-  const [activeService, setActiveService] = useState(null);
-  const [isInView, setIsInView] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
+  const [isInView, setIsInView] = useState(false);
   const sectionRef = useRef(null);
   const modalRef = useRef(null);
 
@@ -96,7 +88,7 @@ const ServicesSection = () => {
       id: "web-dev",
       title: "Web Development",
       description:
-        "Modern, performant websites built with cutting-edge technologies. I create fast, scalable, and maintainable web applications that deliver exceptional user experiences.",
+        "Modern, performant websites built with cutting-edge technologies.",
       icon: Code2,
       features: [
         "React/Next.js Applications",
@@ -116,7 +108,6 @@ const ServicesSection = () => {
         "Redux",
         "Vite",
       ],
-      color: "from-blue-500/20 to-cyan-500/20",
       details: {
         timeline: [
           {
@@ -149,7 +140,7 @@ const ServicesSection = () => {
       id: "ui-ux",
       title: "UI/UX Design",
       description:
-        "Intuitive interfaces that enhance user experience and engagement. I combine aesthetics with functionality to create designs that users love.",
+        "Intuitive interfaces that enhance user experience and engagement.",
       icon: Palette,
       features: [
         "User Research & Analysis",
@@ -169,7 +160,6 @@ const ServicesSection = () => {
         "Sketch",
         "Adobe Creative Suite",
       ],
-      color: "from-purple-500/20 to-pink-500/20",
       details: {
         timeline: [
           {
@@ -202,7 +192,7 @@ const ServicesSection = () => {
       id: "animation",
       title: "Web Animation",
       description:
-        "Engaging animations that bring your digital products to life. From subtle micro-interactions to complex 3D experiences.",
+        "Engaging animations that bring your digital products to life.",
       icon: Zap,
       features: [
         "Micro-interactions",
@@ -222,7 +212,6 @@ const ServicesSection = () => {
         "WebGL",
         "SVG",
       ],
-      color: "from-yellow-500/20 to-orange-500/20",
       details: {
         timeline: [
           {
@@ -254,8 +243,7 @@ const ServicesSection = () => {
     {
       id: "fullstack",
       title: "Full-Stack Projects",
-      description:
-        "End-to-end solutions from database design to deployment. Complete digital products built from scratch.",
+      description: "End-to-end solutions from database design to deployment.",
       icon: Layers,
       features: [
         "Full Architecture Design",
@@ -275,7 +263,6 @@ const ServicesSection = () => {
         "Express",
         "NestJS",
       ],
-      color: "from-green-500/20 to-emerald-500/20",
       details: {
         timeline: [
           {
@@ -308,7 +295,7 @@ const ServicesSection = () => {
       id: "responsive",
       title: "Responsive Redesign",
       description:
-        "Modernizing existing websites for all devices and screen sizes. Breathing new life into outdated interfaces.",
+        "Modernizing existing websites for all devices and screen sizes.",
       icon: Smartphone,
       features: [
         "Mobile-First Approach",
@@ -328,7 +315,6 @@ const ServicesSection = () => {
         "Web Vitals",
         "Core Web Vitals",
       ],
-      color: "from-indigo-500/20 to-blue-500/20",
       details: {
         timeline: [
           {
@@ -361,7 +347,7 @@ const ServicesSection = () => {
       id: "consulting",
       title: "Tech Consulting",
       description:
-        "Strategic guidance for digital transformation and innovation. Expert advice to optimize your technology stack.",
+        "Strategic guidance for digital transformation and innovation.",
       icon: Rocket,
       features: [
         "Technology Strategy",
@@ -381,7 +367,6 @@ const ServicesSection = () => {
         "Documentation",
         "Workshops",
       ],
-      color: "from-red-500/20 to-pink-500/20",
       details: {
         timeline: [
           {
@@ -412,35 +397,34 @@ const ServicesSection = () => {
     },
   ];
 
+  // Duplicate services for seamless marquee
+  const marqueeServices = [...services, ...services, ...services];
+
   const stats = [
     {
       value: "100+",
       label: "Projects Delivered",
       icon: CheckCircle,
-      color: "text-green-400",
     },
     {
       value: "99.9%",
       label: "Uptime Guarantee",
       icon: Shield,
-      color: "text-blue-400",
     },
     {
       value: "< 2s",
       label: "Load Time",
       icon: Clock,
-      color: "text-yellow-400",
     },
     {
       value: "50+",
       label: "Happy Clients",
       icon: Users,
-      color: "text-purple-400",
     },
   ];
 
-  // Hand-drawn border component (from About Me)
-  const HandDrawnBorder = ({ isActive, color = "white", className = "" }) => (
+  // Hand-drawn border component
+  const HandDrawnBorder = ({ isActive, className = "" }) => (
     <div
       className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}
     >
@@ -452,7 +436,7 @@ const ServicesSection = () => {
         <path
           d="M0,0.5 Q10,0.2 20,0.5 T40,0.3 T60,0.6 T80,0.4 T100,0.5"
           fill="none"
-          stroke={color}
+          stroke="white"
           strokeWidth="0.5"
           strokeOpacity={isActive ? 0.8 : 0.3}
           strokeLinecap="round"
@@ -467,7 +451,7 @@ const ServicesSection = () => {
         <path
           d="M0.5,0 Q0.8,10 0.5,20 T0.7,40 T0.4,60 T0.6,80 T0.5,100"
           fill="none"
-          stroke={color}
+          stroke="white"
           strokeWidth="0.5"
           strokeOpacity={isActive ? 0.8 : 0.3}
           strokeLinecap="round"
@@ -482,7 +466,7 @@ const ServicesSection = () => {
         <path
           d="M0,0.5 Q15,0.7 30,0.4 T50,0.6 T70,0.3 T90,0.7 T100,0.5"
           fill="none"
-          stroke={color}
+          stroke="white"
           strokeWidth="0.5"
           strokeOpacity={isActive ? 0.8 : 0.3}
           strokeLinecap="round"
@@ -497,7 +481,7 @@ const ServicesSection = () => {
         <path
           d="M0.5,0 Q0.3,15 0.5,30 T0.3,50 T0.6,70 T0.4,90 T0.5,100"
           fill="none"
-          stroke={color}
+          stroke="white"
           strokeWidth="0.5"
           strokeOpacity={isActive ? 0.8 : 0.3}
           strokeLinecap="round"
@@ -507,7 +491,7 @@ const ServicesSection = () => {
     </div>
   );
 
-  // Floating particles (from About Me)
+  // Floating particles
   const FloatingParticles = () => (
     <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
       {[...Array(20)].map((_, i) => {
@@ -541,14 +525,78 @@ const ServicesSection = () => {
     </div>
   );
 
-  // Subtle gradient background (from About Me)
+  // Subtle gradient background
   const SubtleGradient = () => (
     <div className="absolute inset-0 pointer-events-none">
-      <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-gradient-to-br from-blue-500/5 to-transparent blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-purple-500/5 to-transparent blur-3xl" />
+      <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-gradient-to-br from-white/5 to-transparent blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-white/5 to-transparent blur-3xl" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black" />
     </div>
   );
+
+  // Service Card Component for Marquee
+  const ServiceCard = ({ service, index }) => {
+    const Icon = service.icon;
+    const cardId = `marquee-card-${service.id}-${index}`;
+
+    return (
+      <motion.div
+        key={cardId}
+        whileHover={{
+          scale: 1.05,
+          y: -5,
+          transition: { duration: 0.3 },
+        }}
+        onClick={() => openServiceModal(service)}
+        className="relative flex-shrink-0 w-64 mx-4 cursor-pointer group"
+        onMouseEnter={() =>
+          setIsHovered((prev) => ({ ...prev, [cardId]: true }))
+        }
+        onMouseLeave={() =>
+          setIsHovered((prev) => ({ ...prev, [cardId]: false }))
+        }
+      >
+        <div className="relative h-48 bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 flex flex-col transition-all duration-500 group-hover:border-white/30 group-hover:bg-black/60">
+          <HandDrawnBorder isActive={isHovered[cardId]} />
+
+          {/* Icon */}
+          <div className="w-12 h-12 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:border-white/20 transition-all duration-500">
+            <Icon className="w-6 h-6 text-white" />
+          </div>
+
+          {/* Title */}
+          <h3 className="text-xl font-bold text-white mb-2">{service.title}</h3>
+
+          {/* Description */}
+          <p className="text-white/60 text-sm line-clamp-3 flex-grow">
+            {service.description}
+          </p>
+
+          {/* View Details Button */}
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <div className="flex items-center justify-between">
+              <span className="text-white/40 text-xs">View Details</span>
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
+            </div>
+          </div>
+
+          {/* Hover Indicator */}
+          <motion.div
+            className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear",
+              repeatDelay: 0,
+            }}
+          >
+            <Sparkles className="w-4 h-4 text-white/40" />
+          </motion.div>
+        </div>
+      </motion.div>
+    );
+  };
 
   return (
     <div
@@ -566,14 +614,14 @@ const ServicesSection = () => {
           duration: 1.5,
           ease: [0.22, 1, 0.36, 1],
         }}
-        className="relative z-10 container mx-auto px-4 py-20"
+        className="relative z-10 container mx-auto px-4 py-10"
       >
-        {/* Section Header with About Me styling */}
+        {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, delay: 0.2 }}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -630,246 +678,72 @@ const ServicesSection = () => {
             >
               <Terminal className="w-5 h-5 text-white/60" />
               <span className="text-white/40 font-mono text-sm">
-                $ services --list --detailed
+                $ services --marquee --minimalist
               </span>
             </motion.div>
           </motion.div>
         </motion.div>
 
-        {/* Services Grid with About Me card styling - FIXED BUTTON ALIGNMENT */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-          {services.map((service, index) => {
-            const Icon = service.icon;
-            return (
-              <motion.div
-                key={service.id}
-                initial={{ opacity: 0, y: 40 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.8, delay: 0.3 + index * 0.1 }}
-                className="relative flex flex-col"
-                onMouseEnter={() => setActiveService(service.id)}
-                onMouseLeave={() => setActiveService(null)}
-              >
-                <div
-                  className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 h-full flex flex-col group hover:bg-black/60 hover:border-white/30 transition-all duration-700"
-                  onMouseEnter={() =>
-                    setIsHovered((prev) => ({
-                      ...prev,
-                      [`service-${service.id}`]: true,
-                    }))
-                  }
-                  onMouseLeave={() =>
-                    setIsHovered((prev) => ({
-                      ...prev,
-                      [`service-${service.id}`]: false,
-                    }))
-                  }
-                >
-                  <HandDrawnBorder
-                    isActive={isHovered[`service-${service.id}`]}
-                  />
-
-                  {/* Service Icon */}
-                  <motion.div
-                    animate={
-                      activeService === service.id
-                        ? { rotate: 5, scale: 1.1 }
-                        : { rotate: 0, scale: 1 }
-                    }
-                    transition={{ duration: 0.3 }}
-                    className="w-16 h-16 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center mb-6 group-hover:border-white/20 transition-all duration-500"
-                  >
-                    <Icon className="w-8 h-8 text-white" />
-                  </motion.div>
-
-                  {/* Service Title & Description - Fixed height */}
-                  <div className="mb-6">
-                    <h3 className="text-2xl font-bold text-white mb-4">
-                      {service.title}
-                    </h3>
-                    <p className="text-white/60 line-clamp-3 min-h-[72px]">
-                      {service.description}
-                    </p>
-                  </div>
-
-                  {/* Features List - Fixed height */}
-                  <div className="space-y-3 mb-6 min-h-[180px]">
-                    {service.features.slice(0, 4).map((feature, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, x: -10 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.2 + i * 0.1 }}
-                        className="flex items-start gap-3"
-                      >
-                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 flex-shrink-0" />
-                        <span className="text-white/60 text-sm line-clamp-2">
-                          {feature}
-                        </span>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Tech Stack - Fixed height */}
-                  <div className="mb-8 min-h-[100px]">
-                    <h4 className="text-sm font-semibold text-white/40 mb-3">
-                      TECHNOLOGIES
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {service.tech.slice(0, 5).map((tech, i) => (
-                        <motion.span
-                          key={i}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          whileInView={{ opacity: 1, scale: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: 0.3 + i * 0.05 }}
-                          whileHover={{ scale: 1.05, y: -2 }}
-                          className="px-3 py-1.5 bg-black/40 border border-white/10 rounded-lg text-xs text-white/70 hover:bg-white/5 transition-all duration-300"
-                        >
-                          {tech}
-                        </motion.span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* View Details Button - Pushed to bottom with consistent spacing */}
-                  <div className="mt-auto pt-6 border-t border-white/10">
-                    <motion.button
-                      onClick={() => openServiceModal(service)}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full relative group"
-                    >
-                      <div className="relative p-4 border border-white/30 rounded-xl bg-white backdrop-blur-sm group-hover:bg-white/95 transition-all duration-500">
-                        <HandDrawnBorder
-                          isActive={isHovered[`service-btn-${service.id}`]}
-                          color="#000000"
-                        />
-
-                        <div className="relative flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <BookOpen className="w-5 h-5 text-black" />
-                            <div className="text-left">
-                              <h3 className="font-bold text-black text-sm">
-                                View Details
-                              </h3>
-                              <p className="text-gray-600 text-xs">
-                                See full service breakdown
-                              </p>
-                            </div>
-                          </div>
-                          <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-black group-hover:translate-x-1 transition-all duration-300" />
-                        </div>
-                      </div>
-                    </motion.button>
-                  </div>
-
-                  {/* Hover Indicator */}
-                  <motion.div
-                    className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    animate={{ rotate: activeService === service.id ? 360 : 0 }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                  >
-                    <Sparkles className="w-6 h-6 text-white/40" />
-                  </motion.div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Stats Section with About Me styling */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="mb-20"
-        >
-          <div className="text-center mb-12">
+        {/* Marquee Section */}
+        <div className="relative mb-16">
+          {/* Top Marquee (Right to Left) */}
+          <div className="relative overflow-hidden py-4 mb-8">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.7 }}
-              className="inline-block mb-6"
+              className="flex"
+              animate={{
+                x: [0, -1280], // Move left (right to left)
+              }}
+              transition={{
+                x: {
+                  duration: 40,
+                  repeat: Infinity,
+                  ease: "linear",
+                },
+              }}
             >
-              <div
-                className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl px-6 py-3 group hover:bg-black/60 transition-all duration-700"
-                onMouseEnter={() =>
-                  setIsHovered((prev) => ({ ...prev, statsHeader: true }))
-                }
-                onMouseLeave={() =>
-                  setIsHovered((prev) => ({ ...prev, statsHeader: false }))
-                }
-              >
-                <HandDrawnBorder isActive={isHovered.statsHeader} />
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-yellow-400" />
-                  <span className="text-white/80 font-medium">
-                    Performance Metrics
-                  </span>
-                </div>
-              </div>
+              {marqueeServices.map((service, index) => (
+                <ServiceCard
+                  key={`top-${index}`}
+                  service={service}
+                  index={index}
+                />
+              ))}
             </motion.div>
 
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Consistent Excellence
-            </h2>
-            <p className="text-white/60 max-w-xl mx-auto">
-              Proven results across hundreds of successful projects
-            </p>
+            {/* Gradient Fade Edges */}
+            <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-black to-transparent z-10" />
+            <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-black to-transparent z-10" />
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                  transition={{ delay: 0.8 + index * 0.1 }}
-                  className="relative"
-                >
-                  <div
-                    className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 text-center group hover:bg-black/60 hover:border-white/30 transition-all duration-700"
-                    onMouseEnter={() =>
-                      setIsHovered((prev) => ({
-                        ...prev,
-                        [`stat-${index}`]: true,
-                      }))
-                    }
-                    onMouseLeave={() =>
-                      setIsHovered((prev) => ({
-                        ...prev,
-                        [`stat-${index}`]: false,
-                      }))
-                    }
-                  >
-                    <HandDrawnBorder isActive={isHovered[`stat-${index}`]} />
+          {/* Bottom Marquee (Left to Right) */}
+          <div className="relative overflow-hidden py-4">
+            <motion.div
+              className="flex"
+              animate={{
+                x: [-1280, 0], // Move right (left to right)
+              }}
+              transition={{
+                x: {
+                  duration: 40,
+                  repeat: Infinity,
+                  ease: "linear",
+                },
+              }}
+            >
+              {marqueeServices.map((service, index) => (
+                <ServiceCard
+                  key={`bottom-${index}`}
+                  service={service}
+                  index={index}
+                />
+              ))}
+            </motion.div>
 
-                    {/* Icon */}
-                    <div className="w-12 h-12 rounded-lg bg-black/60 border border-white/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-500">
-                      <Icon className={`w-6 h-6 ${stat.color}`} />
-                    </div>
-
-                    {/* Value */}
-                    <div className="text-3xl font-bold text-white mb-2">
-                      {stat.value}
-                    </div>
-
-                    {/* Label */}
-                    <div className="text-white/60 text-sm">{stat.label}</div>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {/* Gradient Fade Edges */}
+            <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-black to-transparent z-10" />
+            <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-black to-transparent z-10" />
           </div>
-        </motion.div>
+        </div>
       </motion.div>
 
       {/* Service Details Modal */}
@@ -908,7 +782,7 @@ const ServicesSection = () => {
                 <div className="relative p-6 border-b border-white/10">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4 flex-1 pr-8">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center">
                         {selectedService.icon && (
                           <selectedService.icon className="w-6 h-6 text-white" />
                         )}
@@ -939,7 +813,7 @@ const ServicesSection = () => {
                     {/* Left Column - Details */}
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-                        <BookOpen className="w-5 h-5 text-blue-400" />
+                        <BookOpen className="w-5 h-5 text-white/60" />
                         <span>SERVICE OVERVIEW</span>
                       </h3>
 
@@ -966,7 +840,7 @@ const ServicesSection = () => {
                                 transition={{ delay: index * 0.05 }}
                                 className="flex items-start gap-3"
                               >
-                                <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                                <CheckCircle className="w-5 h-5 text-white/60 mt-0.5 flex-shrink-0" />
                                 <span className="text-white/60">{feature}</span>
                               </motion.div>
                             ))}
@@ -998,7 +872,7 @@ const ServicesSection = () => {
                     <div className="space-y-8">
                       <div>
                         <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-                          <Calendar className="w-5 h-5 text-purple-400" />
+                          <Calendar className="w-5 h-5 text-white/60" />
                           <span>PROJECT TIMELINE</span>
                         </h3>
 
@@ -1010,10 +884,10 @@ const ServicesSection = () => {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
-                                className={`p-4 rounded-xl bg-gradient-to-br ${selectedService.color} backdrop-blur-sm border border-white/10`}
+                                className="p-4 rounded-xl bg-black/40 backdrop-blur-sm border border-white/10"
                               >
                                 <div className="flex items-center gap-3 mb-2">
-                                  <span className="text-sm font-semibold text-blue-300">
+                                  <span className="text-sm font-semibold text-white/40">
                                     Phase {index + 1}
                                   </span>
                                   <span className="text-white/40">•</span>
@@ -1032,7 +906,7 @@ const ServicesSection = () => {
 
                       <div>
                         <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-                          <Trophy className="w-5 h-5 text-yellow-400" />
+                          <Trophy className="w-5 h-5 text-white/60" />
                           <span>DELIVERABLES</span>
                         </h3>
 
@@ -1046,7 +920,7 @@ const ServicesSection = () => {
                                 transition={{ delay: 0.3 + index * 0.1 }}
                                 className="flex items-start gap-3"
                               >
-                                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 flex-shrink-0" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-white/40 mt-2 flex-shrink-0" />
                                 <span className="text-white/70">{item}</span>
                               </motion.div>
                             )
