@@ -11,7 +11,7 @@ const Login = lazy(() => import("./page/Login"));
 const NotFoundPage = lazy(() => import("./components/NotFoundPage"));
 
 const Dashboard = lazy(() => import("./dashboardComponents/Dashboard"));
-const Projects = lazy(() => import("./page/dashboard/projects"));
+const Projects = lazy(() => import("./page/dashboard/Projects"));
 const Privacy = lazy(() => import("./page/dashboard/Privacy"));
 const Content = lazy(() => import("./page/dashboard/Content"));
 const Review = lazy(() => import("./page/dashboard/Review"));
