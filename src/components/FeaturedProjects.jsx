@@ -4,6 +4,7 @@ import React, {
   useRef,
   useMemo,
   useCallback,
+  memo,
 } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
@@ -320,7 +321,7 @@ const FeaturedProjects = () => {
   );
 
   // Smooth hand-drawn border component - memoized
-  const HandDrawnBorder = React.memo(({ isActive, color = "white" }) => (
+  const HandDrawnBorder = memo(({ isActive, color = "white" }) => (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       {/* Top border */}
       <svg
