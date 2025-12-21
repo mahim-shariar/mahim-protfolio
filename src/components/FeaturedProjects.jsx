@@ -1,5 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   Terminal,
   ExternalLink,
@@ -47,7 +53,12 @@ const FeaturedProjects = () => {
   const [isHovered, setIsHovered] = useState({});
   const modalRef = useRef(null);
   const sectionRef = useRef(null);
-  const [isInView, setIsInView] = useState(false);
+
+  // Use framer-motion's optimized useInView hook
+  const isInView = useInView(sectionRef, {
+    amount: 0.1,
+    once: false, // Change to true if you only want animation once
+  });
 
   // Use API hook for fetching categories and projects
   const {
@@ -64,13 +75,16 @@ const FeaturedProjects = () => {
   } = useApi();
 
   // Default tabs (will be overridden by API data)
-  const defaultTabs = [
-    { id: "all", label: "ALL", icon: Terminal, count: 8 },
-    { id: "portfolio", label: "PORTFOLIO", icon: Globe, count: 3 },
-    { id: "ecommerce", label: "ECOMMERCE", icon: ShoppingBag, count: 2 },
-    { id: "dashboard", label: "DASHBOARD", icon: LayoutDashboard, count: 2 },
-    { id: "management", label: "MANAGEMENT", icon: Building, count: 1 },
-  ];
+  const defaultTabs = useMemo(
+    () => [
+      { id: "all", label: "ALL", icon: Terminal, count: 8 },
+      { id: "portfolio", label: "PORTFOLIO", icon: Globe, count: 3 },
+      { id: "ecommerce", label: "ECOMMERCE", icon: ShoppingBag, count: 2 },
+      { id: "dashboard", label: "DASHBOARD", icon: LayoutDashboard, count: 2 },
+      { id: "management", label: "MANAGEMENT", icon: Building, count: 1 },
+    ],
+    []
+  );
 
   // State for tabs (will be populated from API)
   const [tabs, setTabs] = useState(defaultTabs);
@@ -81,6 +95,21 @@ const FeaturedProjects = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categoryFilterOpen, setCategoryFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Memoized functions to prevent unnecessary re-renders
+  const openModal = useCallback((project) => {
+    setSelectedProject(project);
+    setIsModalOpen(true);
+    document.body.style.overflow = "hidden";
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    setTimeout(() => {
+      setSelectedProject(null);
+      document.body.style.overflow = "auto";
+    }, 300);
+  }, []);
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -183,7 +212,7 @@ const FeaturedProjects = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [getCategories, defaultTabs]);
 
   // Fetch projects whenever activeTab or selectedCategory changes
   useEffect(() => {
@@ -223,86 +252,50 @@ const FeaturedProjects = () => {
     };
 
     fetchProjects();
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, getProjects, resetProjects]);
 
   // Handle tab click
-  const handleTabClick = async (index) => {
-    setActiveTab(index);
-    const selectedTab = tabs[index];
+  const handleTabClick = useCallback(
+    async (index) => {
+      setActiveTab(index);
+      const selectedTab = tabs[index];
 
-    // Update selected category based on tab selection
-    if (selectedTab.id === "all") {
-      setSelectedCategory(null);
-    } else {
-      setSelectedCategory(selectedTab.id); // This is now the category _id
-    }
-  };
+      // Update selected category based on tab selection
+      if (selectedTab.id === "all") {
+        setSelectedCategory(null);
+      } else {
+        setSelectedCategory(selectedTab.id); // This is now the category _id
+      }
+    },
+    [tabs]
+  );
 
   // Handle category filter selection
-  const handleCategorySelect = (categoryId) => {
-    setSelectedCategory(categoryId === "all" ? null : categoryId);
-    setCategoryFilterOpen(false);
+  const handleCategorySelect = useCallback(
+    (categoryId) => {
+      setSelectedCategory(categoryId === "all" ? null : categoryId);
+      setCategoryFilterOpen(false);
 
-    // Update active tab based on selection
-    const tabIndex = tabs.findIndex(
-      (tab) => tab.id === (categoryId === "all" ? "all" : categoryId)
-    );
-    if (tabIndex !== -1) {
-      setActiveTab(tabIndex);
-    }
-  };
+      // Update active tab based on selection
+      const tabIndex = tabs.findIndex(
+        (tab) => tab.id === (categoryId === "all" ? "all" : categoryId)
+      );
+      if (tabIndex !== -1) {
+        setActiveTab(tabIndex);
+      }
+    },
+    [tabs]
+  );
 
   // Clear all filters
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSelectedCategory(null);
     setSearchQuery("");
     setActiveTab(0); // Reset to ALL tab
-  };
-
-  // Intersection Observer for smooth scroll animation
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      {
-        threshold: 0.1,
-        rootMargin: "0px 0px -100px 0px",
-      }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
   }, []);
 
   // Determine visible tabs based on showAllCategories state
   const visibleTabs = showAllCategories ? tabs : tabs.slice(0, 5);
-
-  // Clean modal open handler
-  const openModal = (project) => {
-    setSelectedProject(project);
-    setIsModalOpen(true);
-    document.body.style.overflow = "hidden";
-  };
-
-  // Clean modal close handler
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setTimeout(() => {
-      setSelectedProject(null);
-      document.body.style.overflow = "auto";
-    }, 300);
-  };
 
   // Handle escape key
   useEffect(() => {
@@ -314,17 +307,20 @@ const FeaturedProjects = () => {
 
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [isModalOpen]);
+  }, [isModalOpen, closeModal]);
 
   // Handle click outside
-  const handleBackdropClick = (e) => {
-    if (modalRef.current && !modalRef.current.contains(e.target)) {
-      closeModal();
-    }
-  };
+  const handleBackdropClick = useCallback(
+    (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) {
+        closeModal();
+      }
+    },
+    [closeModal]
+  );
 
-  // Smooth hand-drawn border component
-  const HandDrawnBorder = ({ isActive, color = "white" }) => (
+  // Smooth hand-drawn border component - memoized
+  const HandDrawnBorder = React.memo(({ isActive, color = "white" }) => (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       {/* Top border */}
       <svg
@@ -391,109 +387,30 @@ const FeaturedProjects = () => {
         />
       </svg>
     </div>
-  );
+  ));
 
-  // Animated Matrix Digital Rain Background
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    const setCanvasSize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = canvas.clientWidth * dpr;
-      canvas.height = canvas.clientHeight * dpr;
-      ctx.scale(dpr, dpr);
-    };
-
-    setCanvasSize();
-    window.addEventListener("resize", setCanvasSize);
-
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%\"'#&_(),.;:?!\\|{}<>[]^~";
-    const fontSize = 14;
-    const columns = Math.floor(canvas.clientWidth / fontSize);
-    const drops = Array(columns).fill(1);
-
-    const colors = {
-      primary: "#FFFFFF",
-      secondary: "#F0F0F0",
-      tertiary: "#A0A0A0",
-      dark: "#202020",
-    };
-
-    const draw = () => {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-
-      ctx.font = `500 ${fontSize}px 'Courier New', 'Monaco', monospace`;
-      ctx.textAlign = "center";
-
-      for (let i = 0; i < drops.length; i++) {
-        const char = chars[Math.floor(Math.random() * chars.length)];
-        const position = drops[i] * fontSize;
-        const maxHeight = canvas.clientHeight;
-
-        let color;
-        if (position < maxHeight * 0.2) {
-          color = colors.primary;
-          ctx.globalAlpha = 1.0;
-        } else if (position < maxHeight * 0.5) {
-          color = colors.secondary;
-          ctx.globalAlpha = 0.8;
-        } else if (position < maxHeight * 0.8) {
-          color = colors.tertiary;
-          ctx.globalAlpha = 0.6;
-        } else {
-          color = colors.dark;
-          ctx.globalAlpha = 0.4;
-        }
-
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 10;
-        ctx.fillStyle = color;
-        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
-        ctx.shadowBlur = 0;
-
-        drops[i] += 0.8 + Math.random() * 0.4;
-
-        if (drops[i] * fontSize > canvas.clientHeight && Math.random() > 0.97) {
-          drops[i] = 0;
-        }
-      }
-
-      ctx.globalAlpha = 1.0;
-      requestAnimationFrame(draw);
-    };
-
-    draw();
-
-    return () => {
-      window.removeEventListener("resize", setCanvasSize);
-    };
-  }, []);
-
-  // Floating Binary Particles
-  const FloatingBinaryParticles = () => (
+  // Optimized floating particles - reduced count and simplified
+  const FloatingBinaryParticles = React.memo(() => (
     <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
-      {[...Array(50)].map((_, i) => {
-        const size = Math.random() * 20 + 10;
+      {[...Array(20)].map((_, i) => {
+        // Reduced from 50 to 20
+        const size = Math.random() * 15 + 8; // Reduced size range
         const duration = Math.random() * 20 + 15;
         const delay = Math.random() * 5;
 
         return (
           <motion.div
             key={i}
-            className="absolute text-white/30 font-mono"
+            className="absolute text-white/20 font-mono" // Reduced opacity
             style={{
               fontSize: `${size}px`,
               left: `${Math.random() * 100}%`,
+              top: "-50px", // Start above viewport
             }}
+            initial={{ y: 0 }}
             animate={{
-              y: ["-100px", "100vh"],
-              opacity: [0, 0.8, 0],
-              x: [0, (Math.random() - 0.5) * 100, 0],
+              y: ["-50px", "calc(100vh + 50px)"], // Optimized animation
+              opacity: [0, 0.4, 0], // Smoother opacity
             }}
             transition={{
               duration,
@@ -507,65 +424,31 @@ const FeaturedProjects = () => {
         );
       })}
     </div>
-  );
+  ));
 
-  // Animated Circuit Lines
-  const CircuitLines = () => (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-5">
-      {[...Array(8)].map((_, i) => {
-        const startX = Math.random() * 100;
-        const startY = Math.random() * 100;
-        const endX = Math.random() * 100;
-        const endY = Math.random() * 100;
-        const duration = Math.random() * 10 + 5;
-
-        return (
-          <svg key={i} className="absolute w-full h-full">
-            <motion.path
-              d={`M${startX}% ${startY}% Q${(startX + endX) / 2}% ${
-                (startY + endY) / 2
-              }% ${endX}% ${endY}%`}
-              fill="none"
-              stroke="white"
-              strokeWidth="0.5"
-              strokeDasharray="4,4"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{
-                duration,
-                repeat: Infinity,
-                repeatType: "reverse",
-                ease: "linear",
-              }}
-            />
-          </svg>
-        );
-      })}
-    </div>
-  );
-
-  // Pulsating Orbs
-  const PulsatingOrbs = () => (
+  // Simplified Pulsating Orbs - reduced count
+  const PulsatingOrbs = React.memo(() => (
     <div className="absolute inset-0 pointer-events-none">
-      {[...Array(6)].map((_, i) => {
-        const size = Math.random() * 300 + 200;
+      {[...Array(3)].map((_, i) => {
+        // Reduced from 6 to 3
+        const size = Math.random() * 200 + 100; // Reduced size
         const duration = Math.random() * 8 + 4;
 
         return (
           <motion.div
             key={i}
-            className="absolute rounded-full blur-3xl"
+            className="absolute rounded-full blur-2xl" // Reduced blur
             style={{
               width: size,
               height: size,
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               background:
-                "radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)",
+                "radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 70%)", // Reduced opacity
             }}
             animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.02, 0.08, 0.02],
+              scale: [1, 1.1, 1], // Reduced scale animation
+              opacity: [0.01, 0.04, 0.01], // Reduced opacity range
             }}
             transition={{
               duration,
@@ -576,90 +459,157 @@ const FeaturedProjects = () => {
         );
       })}
     </div>
-  );
+  ));
 
-  // Animated Scan Lines
-  const AnimatedScanLines = () => (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
-      <motion.div
-        className="absolute inset-0"
-        style={{
-          background: `repeating-linear-gradient(
-            0deg,
-            transparent,
-            transparent 2px,
-            rgba(255,255,255,0.05) 2px,
-            rgba(255,255,255,0.05) 4px
-          )`,
-        }}
-        animate={{ y: [0, 4, 0] }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-      />
-    </div>
-  );
+  // Optimized Matrix Digital Rain Background
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    let animationId;
+    let drops = [];
+
+    const setCanvasSize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      // Reinitialize drops with new column count
+      const fontSize = 12; // Reduced font size
+      const columns = Math.floor(rect.width / fontSize);
+      drops = Array(columns).fill(0);
+    };
+
+    setCanvasSize();
+
+    const resizeObserver = new ResizeObserver(() => {
+      setCanvasSize();
+    });
+
+    resizeObserver.observe(canvas);
+
+    const chars = "01";
+    const fontSize = 12;
+    const columns = Math.floor(
+      canvas.width / (fontSize * (window.devicePixelRatio || 1))
+    );
+
+    const draw = () => {
+      // Clear with more opaque background for better performance
+      ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.font = `400 ${fontSize}px monospace`;
+      ctx.textAlign = "center";
+
+      for (let i = 0; i < columns; i++) {
+        const char = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+
+        // Simplified color gradient
+        const opacity = Math.max(0, 1 - (y / canvas.height) * 2);
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.3})`;
+        ctx.fillText(char, x, y);
+
+        drops[i] += 0.8;
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) {
+          drops[i] = 0;
+        }
+      }
+
+      animationId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  // Optimized animation variants for better performance
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        when: "beforeChildren",
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
+
+  const staggerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.1,
+      },
+    },
+  };
 
   return (
     <div
       ref={sectionRef}
       className="relative min-h-screen bg-black overflow-hidden"
     >
-      {/* Main container with scroll animation */}
+      {/* Main container with optimized animation */}
       <motion.div
-        initial={{ opacity: 0, y: 100 }}
-        animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 100 }}
-        transition={{
-          duration: 1.2,
-          ease: [0.22, 1, 0.36, 1], // Smooth ease out
-          staggerChildren: 0.2,
-        }}
+        variants={containerVariants}
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
         className="py-20"
       >
-        {/* Background Animations */}
+        {/* Background Animations - simplified */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full opacity-15"
+          className="absolute inset-0 w-full h-full opacity-10" // Reduced opacity
         />
 
         <FloatingBinaryParticles />
-        <CircuitLines />
         <PulsatingOrbs />
-        <AnimatedScanLines />
 
-        {/* Subtle gradient overlay */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ duration: 1.5, delay: 0.3 }}
-          className="absolute inset-0 bg-gradient-to-b from-transparent via-black/30 to-black"
-        />
+        {/* Subtle gradient overlay - simplified */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black" />
 
-        {/* Pen Tool Floating Icon */}
+        {/* Pen Tool Floating Icon - simplified animation */}
         <motion.div
-          initial={{ opacity: 0, scale: 0, rotate: -180 }}
-          animate={isInView ? { opacity: 1, scale: 1, rotate: 0 } : {}}
-          transition={{ delay: 0.8, type: "spring", stiffness: 100 }}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={isInView ? { opacity: 1, scale: 1 } : {}}
+          transition={{ delay: 0.5, duration: 0.5 }}
           className="absolute top-8 right-8 z-30 hidden lg:block"
         >
-          <PenTool className="w-6 h-6 text-white/30 animate-pulse transition-all duration-500 ease-in-out" />
+          <PenTool className="w-6 h-6 text-white/20" /> {/* Reduced opacity */}
         </motion.div>
 
         <div className="relative z-10 container mx-auto px-4">
-          {/* Header with clean design - staggered animation */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-center mb-16"
-          >
+          {/* Header with optimized animation */}
+          <motion.div variants={itemVariants} className="text-center mb-16">
             <div className="inline-block mb-8">
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                transition={{ duration: 0.6, delay: 0.4 }}
+                variants={itemVariants}
                 className="relative bg-black/60 backdrop-blur-sm border border-white/10 rounded-2xl p-8 inline-block group hover:bg-black/80 transition-all duration-500"
                 onMouseEnter={() =>
                   setIsHovered((prev) => ({ ...prev, header: true }))
@@ -671,42 +621,30 @@ const FeaturedProjects = () => {
                 <HandDrawnBorder isActive={isHovered.header} />
 
                 {/* Clean terminal dots */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={isInView ? { opacity: 1 } : {}}
-                  transition={{ delay: 0.6 }}
-                  className="flex gap-1.5 mb-6 justify-center"
-                >
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: 0 }}
-                    className="w-2 h-2 rounded-full bg-white/40"
-                  />
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
-                    className="w-2 h-2 rounded-full bg-white/60"
-                  />
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
-                    className="w-2 h-2 rounded-full bg-white/80"
-                  />
-                </motion.div>
+                <div className="flex gap-1.5 mb-6 justify-center">
+                  {[0, 0.2, 0.4].map((delay, index) => (
+                    <motion.div
+                      key={index}
+                      className="w-2 h-2 rounded-full bg-white/40"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        delay,
+                      }}
+                    />
+                  ))}
+                </div>
 
                 <motion.h1
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.6, delay: 0.5 }}
+                  variants={itemVariants}
                   className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight"
                 >
                   FEATURED PROJECTS
                 </motion.h1>
 
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={isInView ? { opacity: 1 } : {}}
-                  transition={{ delay: 0.7 }}
+                  variants={itemVariants}
                   className="flex items-center justify-center gap-3 mt-6"
                 >
                   <Terminal className="w-5 h-5 text-white/60" />
@@ -718,24 +656,15 @@ const FeaturedProjects = () => {
             </div>
 
             <motion.p
-              initial={{ opacity: 0 }}
-              animate={isInView ? { opacity: 1 } : {}}
-              transition={{ delay: 0.8 }}
+              variants={itemVariants}
               className="text-white/60 text-lg max-w-2xl mx-auto font-light"
-              animate={{ opacity: [0.6, 1, 0.6] }}
-              transition={{ duration: 3, repeat: Infinity }}
             >
               Showcasing featured web applications across different domains
             </motion.p>
           </motion.div>
 
-          {/* Search and Filter Section - Updated with Category Filter */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="mb-12"
-          >
+          {/* Search and Filter Section */}
+          <motion.div variants={itemVariants} className="mb-12">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               {/* Search Bar */}
               <div className="relative w-full md:w-auto md:flex-1">
@@ -894,11 +823,11 @@ const FeaturedProjects = () => {
             </motion.div>
           )}
 
-          {/* Tabs with staggered animation - UPDATED FOR API DATA */}
+          {/* Tabs with optimized animation */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            variants={staggerVariants}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
             className="flex flex-wrap justify-center gap-3 mb-12"
           >
             {categoriesLoading ? (
@@ -906,9 +835,7 @@ const FeaturedProjects = () => {
               [...Array(5)].map((_, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.1 * index }}
+                  variants={itemVariants}
                   className="relative px-6 py-3 rounded-xl backdrop-blur-sm border border-white/10 animate-pulse bg-white/5"
                 >
                   <div className="flex items-center gap-3">
@@ -931,9 +858,7 @@ const FeaturedProjects = () => {
                   return (
                     <motion.button
                       key={tab.id || index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={isInView ? { opacity: 1, y: 0 } : {}}
-                      transition={{ duration: 0.4, delay: 0.1 * index }}
+                      variants={itemVariants}
                       onClick={() => handleTabClick(index)}
                       className={`relative px-6 py-3 rounded-xl backdrop-blur-sm border flex items-center gap-3 transition-all duration-300 group ${
                         isActive
@@ -977,12 +902,7 @@ const FeaturedProjects = () => {
                 {/* Show "View All" button if there are more than 5 categories */}
                 {tabs.length > 5 && (
                   <motion.button
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={isInView ? { opacity: 1, y: 0 } : {}}
-                    transition={{
-                      duration: 0.4,
-                      delay: 0.1 * visibleTabs.length,
-                    }}
+                    variants={itemVariants}
                     onClick={() => setShowAllCategories(!showAllCategories)}
                     className={`relative px-4 py-3 rounded-xl backdrop-blur-sm border flex items-center gap-2 transition-all duration-300 ${
                       showAllCategories
@@ -1018,7 +938,7 @@ const FeaturedProjects = () => {
             )}
           </motion.div>
 
-          {/* Projects Grid with staggered animation */}
+          {/* Projects Grid with optimized animation */}
           <AnimatePresence mode="wait">
             {categoriesLoading || projectsLoading ? (
               // Loading skeleton for projects grid
@@ -1050,251 +970,14 @@ const FeaturedProjects = () => {
               >
                 {projects.length > 0 ? (
                   projects.map((project, index) => (
-                    <motion.div
+                    <ProjectCard
                       key={project._id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.9, y: 30 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.1 }}
-                      className="relative group"
-                      whileHover={{ y: -8, transition: { duration: 0.2 } }}
-                      onMouseEnter={() =>
-                        setIsHovered((prev) => ({
-                          ...prev,
-                          [`project-${project._id}`]: true,
-                        }))
-                      }
-                      onMouseLeave={() =>
-                        setIsHovered((prev) => ({
-                          ...prev,
-                          [`project-${project._id}`]: false,
-                        }))
-                      }
-                    >
-                      {/* Project Card with normal background */}
-                      <div className="relative h-full overflow-hidden rounded-2xl bg-black/60 backdrop-blur-sm border border-white/10 group-hover:border-white/30 group-hover:bg-black/80 transition-all duration-500">
-                        {/* Hand-drawn border */}
-                        <HandDrawnBorder
-                          isActive={isHovered[`project-${project._id}`]}
-                        />
-
-                        {/* Thumbnail */}
-                        <div className="relative h-40 overflow-hidden">
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{
-                              duration: 0.5,
-                              delay: index * 0.1 + 0.2,
-                            }}
-                            className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-30 group-hover:opacity-50 transition-opacity duration-500`}
-                            animate={{
-                              scale: [1, 1.02, 1],
-                            }}
-                            transition={{
-                              duration: 3,
-                              repeat: Infinity,
-                              ease: "easeInOut",
-                            }}
-                          />
-
-                          {/* Shimmer effect */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
-
-                          {/* Featured badge */}
-                          {project.isFeatured && (
-                            <div className="absolute top-4 right-4">
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: index * 0.1 + 0.3 }}
-                                className="relative px-3 py-1.5 bg-yellow-500/20 backdrop-blur-sm rounded-lg border border-yellow-500/30"
-                              >
-                                <span className="text-xs text-yellow-300 font-medium tracking-wider flex items-center gap-1">
-                                  <Star className="w-3 h-3" />
-                                  Featured
-                                </span>
-                              </motion.div>
-                            </div>
-                          )}
-
-                          {/* Project stats overlay */}
-                          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.1 }}
-                              className="flex items-center gap-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-lg group-hover:bg-black/80"
-                            >
-                              <Cpu className="w-3 h-3 text-blue-400" />
-                              <span className="text-xs text-white/70 group-hover:text-white">
-                                {project.complexity || "Intermediate"}
-                              </span>
-                            </motion.div>
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.2 }}
-                              className="flex items-center gap-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-lg group-hover:bg-black/80"
-                            >
-                              <Shield className="w-3 h-3 text-green-400" />
-                              <span className="text-xs text-white/70 group-hover:text-white">
-                                {project.security || "Medium"}
-                              </span>
-                            </motion.div>
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.3 }}
-                              className="flex items-center gap-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-lg group-hover:bg-black/80"
-                            >
-                              <Zap className="w-3 h-3 text-yellow-400" />
-                              <span className="text-xs text-white/70 group-hover:text-white">
-                                {project.performance || "90%"}
-                              </span>
-                            </motion.div>
-                          </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="p-5 relative">
-                          {/* Title */}
-                          <div className="relative mb-3 overflow-hidden">
-                            <motion.h3
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ delay: index * 0.1 + 0.4 }}
-                              className="text-lg font-bold text-white group-hover:text-white/90 transition-colors duration-300"
-                            >
-                              {project.title}
-                            </motion.h3>
-                            <motion.div
-                              className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                              initial={{ x: "-100%" }}
-                              whileHover={{ x: "100%" }}
-                              transition={{ duration: 0.8 }}
-                            />
-                          </div>
-
-                          {/* Description */}
-                          <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: index * 0.1 + 0.5 }}
-                            className="text-white/50 text-sm mb-4 leading-relaxed group-hover:text-white/70 transition-colors duration-300"
-                          >
-                            {project.description}
-                          </motion.p>
-
-                          {/* Tech Stack */}
-                          <div className="flex flex-wrap gap-2 mb-5">
-                            {project.technologies
-                              ?.slice(0, 4)
-                              .map((tech, techIndex) => (
-                                <motion.span
-                                  key={techIndex}
-                                  initial={{ opacity: 0, scale: 0.8 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  transition={{
-                                    delay: index * 0.1 + 0.6 + techIndex * 0.05,
-                                  }}
-                                  className="relative px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/60 group-hover:text-white/80 group-hover:bg-white/10 group-hover:border-white/20 transition-all duration-300 cursor-default overflow-hidden"
-                                  whileHover={{
-                                    scale: 1.05,
-                                    y: -2,
-                                  }}
-                                >
-                                  <span className="relative z-10">{tech}</span>
-                                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                                </motion.span>
-                              ))}
-                            {project.technologies?.length > 4 && (
-                              <motion.span
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: index * 0.1 + 0.9 }}
-                                className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/40"
-                              >
-                                +{project.technologies.length - 4} more
-                              </motion.span>
-                            )}
-                          </div>
-
-                          {/* Bottom Button Section */}
-                          <div className="pt-4 border-t border-white/10 group-hover:border-white/20 transition-all duration-300">
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: index * 0.1 + 0.7 }}
-                              className="flex items-center justify-between"
-                            >
-                              {/* View Details Button */}
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => openModal(project)}
-                                className="relative px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center gap-2 overflow-hidden"
-                              >
-                                <Eye className="w-4 h-4" />
-                                <span className="text-sm font-medium">
-                                  Details
-                                </span>
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700" />
-                              </motion.button>
-
-                              {/* Quick Actions */}
-                              <div className="flex gap-2">
-                                {/* Preview Button */}
-                                {project.liveUrl && (
-                                  <motion.a
-                                    href={project.liveUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="relative w-10 h-10 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center justify-center overflow-hidden"
-                                    title="Live Preview"
-                                  >
-                                    <ExternalLink className="w-4 h-4" />
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700" />
-                                  </motion.a>
-                                )}
-
-                                {/* Code Button */}
-                                {project.githubUrl && (
-                                  <motion.a
-                                    href={project.githubUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="relative w-10 h-10 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center justify-center overflow-hidden"
-                                    title="View Code"
-                                  >
-                                    <Code className="w-4 h-4" />
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700" />
-                                  </motion.a>
-                                )}
-
-                                {/* More Options */}
-                                <motion.button
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  className="relative w-10 h-10 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center justify-center overflow-hidden"
-                                  title="More Options"
-                                >
-                                  <ChevronRight className="w-4 h-4" />
-                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700" />
-                                </motion.button>
-                              </div>
-                            </motion.div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Hover effect glow */}
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/0 via-white/0 to-white/0 group-hover:via-white/5 group-hover:to-white/10 blur-xl opacity-0 group-hover:opacity-50 transition-all duration-500 pointer-events-none -z-10" />
-                    </motion.div>
+                      project={project}
+                      index={index}
+                      openModal={openModal}
+                      isHovered={isHovered}
+                      setIsHovered={setIsHovered}
+                    />
                   ))
                 ) : (
                   <div className="col-span-3 text-center py-16">
@@ -1327,10 +1010,9 @@ const FeaturedProjects = () => {
 
           {/* Terminal Footer with fade in */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={isInView ? { opacity: 1 } : {}}
-            transition={{ delay: 1.5 }}
-            viewport={{ once: true }}
+            variants={itemVariants}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
             className="mt-12 text-center"
           >
             <div
@@ -1349,9 +1031,6 @@ const FeaturedProjects = () => {
                 $ ls featured_projects/ | wc -l
               </span>
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={isInView ? { opacity: 1 } : {}}
-                transition={{ delay: 1.7 }}
                 className="w-2 h-4 bg-white/60"
                 animate={{ opacity: [1, 0, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
@@ -1361,239 +1040,263 @@ const FeaturedProjects = () => {
         </div>
       </motion.div>
 
-      {/* Modal Component - Updated for API data */}
-      <AnimatePresence>
-        {isModalOpen && selectedProject && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50"
-              onClick={closeModal}
-            />
-
-            {/* Modal Content */}
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div
-                ref={modalRef}
-                key="modal"
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                transition={{
-                  duration: 0.3,
-                  ease: "easeOut",
-                }}
-                className="relative w-full max-w-4xl rounded-2xl bg-black/95 backdrop-blur-sm border border-white/10 overflow-hidden shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <HandDrawnBorder isActive={true} />
-
-                {/* Modal Header */}
-                <div className="relative p-6 border-b border-white/10">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 pr-8">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="px-3 py-1 bg-black/60 backdrop-blur-sm rounded-lg border border-white/10">
-                          <span className="text-xs font-medium text-white/80 uppercase tracking-wider">
-                            {selectedProject.categoryDisplay ||
-                              selectedProject.category}
-                          </span>
-                        </div>
-                        {selectedProject.isFeatured && (
-                          <div className="px-3 py-1 bg-yellow-500/20 backdrop-blur-sm rounded-lg border border-yellow-500/30">
-                            <span className="text-xs font-medium text-yellow-300 uppercase tracking-wider flex items-center gap-1">
-                              <Star className="w-3 h-3" />
-                              Featured
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-2 h-2 rounded-full ${
-                              selectedProject.complexity === "Enterprise"
-                                ? "bg-red-500"
-                                : selectedProject.complexity === "Advanced"
-                                ? "bg-orange-500"
-                                : "bg-green-500"
-                            }`}
-                          />
-                          <span className="text-xs text-white/60">
-                            {selectedProject.complexity || "Intermediate"}
-                          </span>
-                        </div>
-                      </div>
-                      <h2 className="text-2xl font-bold text-white">
-                        {selectedProject.title}
-                      </h2>
-                    </div>
-                    <motion.button
-                      whileHover={{ scale: 1.1, rotate: 90 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={closeModal}
-                      className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/60 hover:text-white transition-all duration-300 flex-shrink-0"
-                    >
-                      <X className="w-5 h-5" />
-                    </motion.button>
-                  </div>
-                </div>
-
-                {/* Modal Content */}
-                <div className="p-6 max-h-[60vh] overflow-y-auto">
-                  {/* Project Stats */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="w-4 h-4 text-blue-400" />
-                        <span className="text-sm text-white/60">Timeline</span>
-                      </div>
-                      <p className="text-lg font-semibold text-white">
-                        {selectedProject.timeline || "Not specified"}
-                      </p>
-                    </div>
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Users className="w-4 h-4 text-green-400" />
-                        <span className="text-sm text-white/60">Team Size</span>
-                      </div>
-                      <p className="text-lg font-semibold text-white">
-                        {selectedProject.teamSize || "Not specified"}
-                      </p>
-                    </div>
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Zap className="w-4 h-4 text-yellow-400" />
-                        <span className="text-sm text-white/60">
-                          Performance
-                        </span>
-                      </div>
-                      <p className="text-lg font-semibold text-white">
-                        {selectedProject.performance || "90%"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Full Description */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                      <span className="w-1 h-4 bg-white/40" />
-                      Project Overview
-                    </h3>
-                    <p className="text-white/70 leading-relaxed">
-                      {selectedProject.fullDescription}
-                    </p>
-                  </div>
-
-                  {/* Tech Stack */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                      <span className="w-1 h-4 bg-white/40" />
-                      Technologies Used
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedProject.technologies?.map((tech, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white/70 hover:text-white hover:border-white/20 transition-all duration-300"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Features & Challenges */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                        <span className="w-1 h-4 bg-green-400" />
-                        Key Features
-                      </h3>
-                      <ul className="space-y-2">
-                        {selectedProject.features?.map((feature, index) => (
-                          <li
-                            key={index}
-                            className="flex items-start gap-2 text-white/70"
-                          >
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-400 mt-1.5 flex-shrink-0" />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                        <span className="w-1 h-4 bg-orange-400" />
-                        Challenges Solved
-                      </h3>
-                      <ul className="space-y-2">
-                        {selectedProject.challenges?.map((challenge, index) => (
-                          <li
-                            key={index}
-                            className="flex items-start gap-2 text-white/70"
-                          >
-                            <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 flex-shrink-0" />
-                            <span>{challenge}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Modal Footer */}
-                <div className="relative p-6 border-t border-white/10 bg-black/60">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-green-400" />
-                        <span className="text-sm text-white/60">Security:</span>
-                        <span className="text-sm font-medium text-white">
-                          {selectedProject.security || "Medium"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      {selectedProject.liveUrl && (
-                        <motion.a
-                          href={selectedProject.liveUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center gap-2"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          Live Preview
-                        </motion.a>
-                      )}
-                      {selectedProject.githubUrl && (
-                        <motion.a
-                          href={selectedProject.githubUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-white/90 transition-all duration-300 flex items-center gap-2"
-                        >
-                          <Code className="w-4 h-4" />
-                          View Code
-                        </motion.a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Modal Component */}
+      <ProjectModal
+        isModalOpen={isModalOpen}
+        selectedProject={selectedProject}
+        closeModal={closeModal}
+        modalRef={modalRef}
+      />
     </div>
   );
 };
+
+// Extracted ProjectCard component for better performance
+const ProjectCard = React.memo(
+  ({ project, index, openModal, isHovered, setIsHovered }) => {
+    const projectKey = `project-${project._id}`;
+
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, scale: 0.9, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: index * 0.05 }} // Reduced delay
+        className="relative group"
+        whileHover={{ y: -4, transition: { duration: 0.2 } }} // Reduced y movement
+        onMouseEnter={() =>
+          setIsHovered((prev) => ({
+            ...prev,
+            [projectKey]: true,
+          }))
+        }
+        onMouseLeave={() =>
+          setIsHovered((prev) => ({
+            ...prev,
+            [projectKey]: false,
+          }))
+        }
+      >
+        {/* Project Card */}
+        <div className="relative h-full overflow-hidden rounded-2xl bg-black/60 backdrop-blur-sm border border-white/10 group-hover:border-white/30 group-hover:bg-black/80 transition-all duration-300">
+          {" "}
+          {/* Reduced duration */}
+          {/* Hand-drawn border */}
+          <HandDrawnBorder isActive={isHovered[projectKey]} />
+          {/* Content */}
+          <div className="p-5 relative">
+            {/* Title */}
+            <div className="relative mb-3 overflow-hidden">
+              <h3 className="text-lg font-bold text-white group-hover:text-white/90 transition-colors duration-300">
+                {project.title}
+              </h3>
+            </div>
+
+            {/* Description */}
+            <p className="text-white/50 text-sm mb-4 leading-relaxed group-hover:text-white/70 transition-colors duration-300">
+              {project.description}
+            </p>
+
+            {/* Tech Stack */}
+            <div className="flex flex-wrap gap-2 mb-5">
+              {project.technologies?.slice(0, 4).map((tech, techIndex) => (
+                <span
+                  key={techIndex}
+                  className="relative px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/60 group-hover:text-white/80 group-hover:bg-white/10 group-hover:border-white/20 transition-all duration-300 cursor-default overflow-hidden"
+                >
+                  <span className="relative z-10">{tech}</span>
+                </span>
+              ))}
+              {project.technologies?.length > 4 && (
+                <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/40">
+                  +{project.technologies.length - 4} more
+                </span>
+              )}
+            </div>
+
+            {/* Bottom Button Section */}
+            <div className="pt-4 border-t border-white/10 group-hover:border-white/20 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                {/* View Details Button */}
+                <button
+                  onClick={() => openModal(project)}
+                  className="relative px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span className="text-sm font-medium">Details</span>
+                </button>
+
+                {/* Quick Actions */}
+                <div className="flex gap-2">
+                  {/* Preview Button */}
+                  {project.liveUrl && (
+                    <a
+                      href={project.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative w-10 h-10 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center justify-center"
+                      title="Live Preview"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+
+                  {/* Code Button */}
+                  {project.githubUrl && (
+                    <a
+                      href={project.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative w-10 h-10 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center justify-center"
+                      title="View Code"
+                    >
+                      <Code className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+);
+
+// Extracted ProjectModal component
+const ProjectModal = React.memo(
+  ({ isModalOpen, selectedProject, closeModal, modalRef }) => {
+    if (!isModalOpen || !selectedProject) return null;
+
+    return (
+      <AnimatePresence>
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50"
+            onClick={closeModal}
+          />
+
+          {/* Modal Content */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              ref={modalRef}
+              key="modal"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{
+                duration: 0.3,
+                ease: "easeOut",
+              }}
+              className="relative w-full max-w-4xl rounded-2xl bg-black/95 backdrop-blur-sm border border-white/10 overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <HandDrawnBorder isActive={true} />
+
+              {/* Modal Header */}
+              <div className="relative p-6 border-b border-white/10">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 pr-8">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="px-3 py-1 bg-black/60 backdrop-blur-sm rounded-lg border border-white/10">
+                        <span className="text-xs font-medium text-white/80 uppercase tracking-wider">
+                          {selectedProject.categoryDisplay ||
+                            selectedProject.category}
+                        </span>
+                      </div>
+                      {selectedProject.isFeatured && (
+                        <div className="px-3 py-1 bg-yellow-500/20 backdrop-blur-sm rounded-lg border border-yellow-500/30">
+                          <span className="text-xs font-medium text-yellow-300 uppercase tracking-wider flex items-center gap-1">
+                            <Star className="w-3 h-3" />
+                            Featured
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">
+                      {selectedProject.title}
+                    </h2>
+                  </div>
+                  <button
+                    onClick={closeModal}
+                    className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/60 hover:text-white transition-all duration-300 flex-shrink-0"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 max-h-[60vh] overflow-y-auto">
+                {/* Full Description */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-white mb-3">
+                    Project Overview
+                  </h3>
+                  <p className="text-white/70 leading-relaxed">
+                    {selectedProject.fullDescription}
+                  </p>
+                </div>
+
+                {/* Tech Stack */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-white mb-3">
+                    Technologies Used
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProject.technologies?.map((tech, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white/70 hover:text-white hover:border-white/20 transition-all duration-300"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="relative p-6 border-t border-white/10 bg-black/60">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex flex-wrap gap-3">
+                    {selectedProject.liveUrl && (
+                      <a
+                        href={selectedProject.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center gap-2"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Live Preview
+                      </a>
+                    )}
+                    {selectedProject.githubUrl && (
+                      <a
+                        href={selectedProject.githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-white/90 transition-all duration-300 flex items-center gap-2"
+                      >
+                        <Code className="w-4 h-4" />
+                        View Code
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </>
+      </AnimatePresence>
+    );
+  }
+);
 
 export default FeaturedProjects;
