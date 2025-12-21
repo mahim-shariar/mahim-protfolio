@@ -1,4 +1,10 @@
-import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   Code2,
@@ -411,7 +417,7 @@ const ServicesSection = () => {
     },
   };
 
-  // Optimized HandDrawnBorder component
+  // HandDrawnBorder component - now defined at top level
   const HandDrawnBorder = useMemo(
     () =>
       ({ isActive, className = "" }) =>
@@ -584,7 +590,7 @@ const ServicesSection = () => {
           </motion.div>
         );
       },
-    [openServiceModal, setIsHovered]
+    [openServiceModal, setIsHovered, HandDrawnBorder]
   );
 
   // Optimized Marquee Section Component
@@ -716,7 +722,7 @@ const ServicesSection = () => {
 };
 
 // Extracted ServiceModal component for better performance
-const ServiceModal = memo(
+const ServiceModal = React.memo(
   ({
     selectedService,
     closeModal,
@@ -905,5 +911,7 @@ const ServiceModal = memo(
     );
   }
 );
+
+ServiceModal.displayName = "ServiceModal";
 
 export default ServicesSection;
