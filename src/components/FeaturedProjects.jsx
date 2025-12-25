@@ -1751,9 +1751,6 @@ const FeaturedProjects = () => {
                             <Terminal className="w-4 h-4" />
                             <span className="font-medium">All Categories</span>
                           </div>
-                          <span className="text-xs px-2 py-1 rounded-full bg-black/80">
-                            {totalProjectsCount}
-                          </span>
                         </button>
 
                         <div className="h-px bg-gray-800 my-2" />
@@ -1774,9 +1771,6 @@ const FeaturedProjects = () => {
                                 {category.label}
                               </span>
                             </div>
-                            <span className="text-xs px-2 py-1 rounded-full bg-black/80">
-                              {category.count}
-                            </span>
                           </button>
                         ))}
                       </div>
@@ -1902,15 +1896,6 @@ const FeaturedProjects = () => {
                       <span className="font-medium text-sm tracking-wider">
                         {tab.label}
                       </span>
-                      <motion.span
-                        className={`text-xs px-2 py-1 rounded-full transition-colors ${
-                          isActive ? "bg-black/80" : "bg-black/60"
-                        }`}
-                        animate={isActive ? { scale: [1, 1.1, 1] } : {}}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        {tab.count}
-                      </motion.span>
                     </motion.button>
                   );
                 })}
