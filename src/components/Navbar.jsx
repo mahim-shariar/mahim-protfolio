@@ -11,6 +11,7 @@ import {
   LogOut,
   LayoutDashboard,
   ChevronDown,
+  FolderKanban, // Icon for Projects
 } from "lucide-react";
 
 import logo from "../assets/logo-bg.png";
@@ -47,7 +48,14 @@ const Navbar = () => {
       setIsScrolled(window.scrollY > 20);
 
       // Update active section based on scroll position
-      const sections = ["home", "about", "services", "testimonials", "contact"];
+      const sections = [
+        "home",
+        "about",
+        "services",
+        "projects",
+        "testimonials",
+        "contact",
+      ]; // Added projects
       const currentSection = sections.find((section) => {
         const element = document.getElementById(section);
         if (element) {
@@ -111,6 +119,12 @@ const Navbar = () => {
       label: "Services",
       icon: Briefcase,
       href: "#services",
+    },
+    {
+      id: "projects", // Added projects item
+      label: "Projects",
+      icon: FolderKanban,
+      href: "#projects",
     },
     {
       id: "testimonials",

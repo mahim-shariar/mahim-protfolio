@@ -31,6 +31,8 @@ import {
   SiTailwindcss,
   SiGraphql,
   SiDocker,
+  SiMongodb,
+  SiJavascript,
 } from "react-icons/si";
 import { useApi } from "../hooks/useApi";
 import logo from "../assets/my-profile.png";
@@ -307,7 +309,30 @@ const HeroSection = () => {
     };
   }, []);
 
+  // Smooth scroll to section function
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      // Calculate the offset considering the fixed navbar
+      const navbarHeight = 64; // Height of your navbar
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition =
+        elementPosition + window.pageYOffset - navbarHeight;
+
+      // Smooth scroll to the element
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+  };
+
   // Auto-scroll to bottom of TERMINAL SECTION ONLY when terminal history updates
+  useEffect(() => {
+    if (terminalEndRef.current) {
+      terminalEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [terminalHistory]);
 
   // Smooth hover state transitions
   useEffect(() => {
@@ -368,7 +393,7 @@ const HeroSection = () => {
           },
           {
             type: "output",
-            text: "  Backend: Node.js, Python, GraphQL, REST APIs",
+            text: "  Backend: Node.js, Express, REST APIs, MongoDB",
           },
           { type: "output", text: "  DevOps: Docker, AWS, CI/CD, Git" },
           { type: "input", text: "visitor@portfolio:~$ " },
@@ -379,13 +404,23 @@ const HeroSection = () => {
           { type: "output", text: "Recent Projects:" },
           {
             type: "output",
-            text: "  1. E-commerce Platform - React + Node.js",
+            text: "Nexora Studio – Video Editing Agency Landing Page",
           },
-          { type: "output", text: "  2. AI Dashboard - Next.js + Python" },
-          { type: "output", text: "  3. Mobile App - React Native" },
+          {
+            type: "output",
+            text: "  2. Jayed Talukder – Video Editor Protfolio",
+          },
+          {
+            type: "output",
+            text: "  3. The Zone One – Video Editing Agency Website",
+          },
           { type: "output", text: "Type 'view portfolio' to see details." },
           { type: "input", text: "visitor@portfolio:~$ " },
         ]);
+        // Auto scroll to projects section when user types "projects"
+        setTimeout(() => {
+          scrollToSection("projects");
+        }, 500);
       } else if (cmd === "contact") {
         setTerminalHistory((prev) => [
           ...prev,
@@ -395,6 +430,10 @@ const HeroSection = () => {
           { type: "output", text: `  GitHub: ${content.social.github}` },
           { type: "input", text: "visitor@portfolio:~$ " },
         ]);
+        // Auto scroll to contact section
+        setTimeout(() => {
+          scrollToSection("contact");
+        }, 500);
       } else if (cmd === "clear") {
         setTerminalHistory([
           {
@@ -422,10 +461,12 @@ const HeroSection = () => {
       } else if (cmd === "view portfolio") {
         setTerminalHistory((prev) => [
           ...prev,
-          { type: "output", text: "Opening portfolio in new tab..." },
+          { type: "output", text: "Scrolling to portfolio..." },
           { type: "output", text: "Let's build something amazing together!" },
           { type: "input", text: "visitor@portfolio:~$ " },
         ]);
+        // Scroll to projects section
+        scrollToSection("projects");
       } else {
         setTerminalHistory((prev) => [
           ...prev,
@@ -461,6 +502,12 @@ const HeroSection = () => {
     if (content.resume) {
       window.open(content.resume, "_blank");
     }
+  };
+
+  // Handle portfolio button click
+  const handlePortfolioClick = (e) => {
+    e.preventDefault();
+    scrollToSection("projects");
   };
 
   // Hand-drawn line component
@@ -646,7 +693,7 @@ const HeroSection = () => {
   }
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden">
+    <div id="home" className="relative min-h-screen bg-black overflow-hidden">
       {/* Matrix Background as separate component */}
       <MatrixBackground />
 
@@ -1104,14 +1151,14 @@ const HeroSection = () => {
                         name: "Tailwind",
                       },
                       {
-                        Icon: SiGraphql,
+                        Icon: SiMongodb,
                         color: "text-white/80",
-                        name: "GraphQL",
+                        name: "MongoDB",
                       },
                       {
-                        Icon: SiDocker,
+                        Icon: SiJavascript,
                         color: "text-white/60",
-                        name: "Docker",
+                        name: "JavaScript",
                       },
                     ].map((tech, index) => (
                       <motion.div
@@ -1196,6 +1243,7 @@ const HeroSection = () => {
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={handlePortfolioClick}
                 className="group relative px-5 sm:px-6 py-2.5 sm:py-3 bg-white text-black rounded-xl font-bold overflow-hidden transition-all duration-500 ease-in-out flex-1 min-w-[140px] hover:bg-white/90"
                 onMouseEnter={() => {
                   setIsHovered((prev) => ({ ...prev, portfolioBtn: true }));

@@ -43,7 +43,7 @@ const Home = () => {
         </section>
 
         {/* Featured Projects */}
-        <section className="scroll-mt-16">
+        <section id="projects" className="scroll-mt-16">
           <FeaturedProjects />
         </section>
 
