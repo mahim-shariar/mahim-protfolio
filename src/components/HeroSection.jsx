@@ -29,10 +29,13 @@ import {
   SiTypescript,
   SiNextdotjs,
   SiTailwindcss,
-  SiGraphql,
+  SiExpress,
   SiDocker,
   SiMongodb,
   SiJavascript,
+  SiRedux,
+  SiPostgresql,
+  SiVite,
 } from "react-icons/si";
 import { useApi } from "../hooks/useApi";
 import logo from "../assets/my-profile.png";
@@ -220,15 +223,6 @@ const MatrixBackground = () => {
 
 const HeroSection = () => {
   const api = useApi();
-  const [terminalInput, setTerminalInput] = useState("");
-  const [terminalHistory, setTerminalHistory] = useState([
-    {
-      type: "output",
-      text: "Welcome to my digital space. Type 'help' to see available commands.",
-    },
-    { type: "input", text: "visitor@portfolio:~$ " },
-  ]);
-  const terminalEndRef = useRef(null);
   const [isHovered, setIsHovered] = useState({});
   const [hoverState, setHoverState] = useState({});
 
@@ -248,17 +242,6 @@ const HeroSection = () => {
     experienceYears: "3+",
   });
   const [loading, setLoading] = useState(true);
-
-  // Commands updated with dynamic content
-  const commands = {
-    help: "Show available commands",
-    about: "Learn about me",
-    skills: "View my technical skills",
-    projects: "See my recent work",
-    contact: "Get in touch",
-    clear: "Clear terminal",
-    resume: "Download my resume",
-  };
 
   // Fetch content from API
   useEffect(() => {
@@ -327,13 +310,6 @@ const HeroSection = () => {
     }
   };
 
-  // Auto-scroll to bottom of TERMINAL SECTION ONLY when terminal history updates
-  useEffect(() => {
-    if (terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [terminalHistory]);
-
   // Smooth hover state transitions
   useEffect(() => {
     const entries = Object.entries(isHovered);
@@ -348,154 +324,6 @@ const HeroSection = () => {
       }
     });
   }, [isHovered]);
-
-  const handleTerminalSubmit = (e) => {
-    if (e.key === "Enter" && terminalInput.trim()) {
-      const cmd = terminalInput.toLowerCase().trim();
-
-      // Add command to history
-      setTerminalHistory((prev) => [
-        ...prev,
-        { type: "input", text: `visitor@portfolio:~$ ${terminalInput}` },
-      ]);
-
-      // Process command
-      if (cmd === "help") {
-        setTerminalHistory((prev) => [
-          ...prev,
-          { type: "output", text: "Available commands:" },
-          ...Object.entries(commands).map(([cmd, desc]) => ({
-            type: "output",
-            text: `  ${cmd} - ${desc}`,
-          })),
-          { type: "input", text: "visitor@portfolio:~$ " },
-        ]);
-      } else if (cmd === "about") {
-        setTerminalHistory((prev) => [
-          ...prev,
-          {
-            type: "output",
-            text: `I'm ${content.name}, a passionate ${content.title}.`,
-          },
-          {
-            type: "output",
-            text: content.description,
-          },
-          { type: "input", text: "visitor@portfolio:~$ " },
-        ]);
-      } else if (cmd === "skills") {
-        setTerminalHistory((prev) => [
-          ...prev,
-          { type: "output", text: "Core Technologies:" },
-          {
-            type: "output",
-            text: "  Frontend: React, TypeScript, Next.js, Tailwind",
-          },
-          {
-            type: "output",
-            text: "  Backend: Node.js, Express, REST APIs, MongoDB",
-          },
-          { type: "output", text: "  DevOps: Docker, AWS, CI/CD, Git" },
-          { type: "input", text: "visitor@portfolio:~$ " },
-        ]);
-      } else if (cmd === "projects") {
-        setTerminalHistory((prev) => [
-          ...prev,
-          { type: "output", text: "Recent Projects:" },
-          {
-            type: "output",
-            text: "Nexora Studio – Video Editing Agency Landing Page",
-          },
-          {
-            type: "output",
-            text: "  2. Jayed Talukder – Video Editor Protfolio",
-          },
-          {
-            type: "output",
-            text: "  3. The Zone One – Video Editing Agency Website",
-          },
-          { type: "output", text: "Type 'view portfolio' to see details." },
-          { type: "input", text: "visitor@portfolio:~$ " },
-        ]);
-        // Auto scroll to projects section when user types "projects"
-        setTimeout(() => {
-          scrollToSection("projects");
-        }, 500);
-      } else if (cmd === "contact") {
-        setTerminalHistory((prev) => [
-          ...prev,
-          { type: "output", text: "Get in touch:" },
-          { type: "output", text: `  Email: ${content.social.email}` },
-          { type: "output", text: `  LinkedIn: ${content.social.linkedin}` },
-          { type: "output", text: `  GitHub: ${content.social.github}` },
-          { type: "input", text: "visitor@portfolio:~$ " },
-        ]);
-        // Auto scroll to contact section
-        setTimeout(() => {
-          scrollToSection("contact");
-        }, 500);
-      } else if (cmd === "clear") {
-        setTerminalHistory([
-          {
-            type: "output",
-            text: "Welcome to my digital space. Type 'help' to see available commands.",
-          },
-          { type: "input", text: "visitor@portfolio:~$ " },
-        ]);
-      } else if (cmd === "resume") {
-        if (content.resume) {
-          setTerminalHistory((prev) => [
-            ...prev,
-            { type: "output", text: "Opening resume download..." },
-            { type: "output", text: "Resume download started!" },
-            { type: "input", text: "visitor@portfolio:~$ " },
-          ]);
-          window.open(content.resume, "_blank");
-        } else {
-          setTerminalHistory((prev) => [
-            ...prev,
-            { type: "output", text: "Resume not available at the moment." },
-            { type: "input", text: "visitor@portfolio:~$ " },
-          ]);
-        }
-      } else if (cmd === "view portfolio") {
-        setTerminalHistory((prev) => [
-          ...prev,
-          { type: "output", text: "Scrolling to portfolio..." },
-          { type: "output", text: "Let's build something amazing together!" },
-          { type: "input", text: "visitor@portfolio:~$ " },
-        ]);
-        // Scroll to projects section
-        scrollToSection("projects");
-      } else {
-        setTerminalHistory((prev) => [
-          ...prev,
-          {
-            type: "output",
-            text: `Command not found: ${cmd}. Type 'help' for available commands.`,
-          },
-          { type: "input", text: "visitor@portfolio:~$ " },
-        ]);
-      }
-
-      setTerminalInput("");
-    }
-  };
-
-  // Handle quick command click
-  const handleQuickCommand = (cmd) => {
-    setTerminalInput(cmd);
-    setTimeout(() => {
-      const event = new KeyboardEvent("keydown", {
-        key: "Enter",
-        code: "Enter",
-        keyCode: 13,
-        which: 13,
-        bubbles: true,
-      });
-      document.activeElement.dispatchEvent(event);
-    }, 10);
-  };
 
   // Handle resume download
   const handleResumeDownload = () => {
@@ -713,32 +541,32 @@ const HeroSection = () => {
       {/* Main Content */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20 min-h-screen flex items-center">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full">
-          {/* Left Column - Interactive Terminal & Info */}
+          {/* Left Column - BIG Profile Picture with Animations */}
           <div className="space-y-6 lg:space-y-8">
-            {/* Interactive Terminal */}
+            {/* Animated BIG Profile Picture Container */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="bg-black/90 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-2xl shadow-white/5 relative group transition-all duration-500 ease-in-out"
               onMouseEnter={() => {
-                setIsHovered((prev) => ({ ...prev, terminal: true }));
+                setIsHovered((prev) => ({ ...prev, profilePic: true }));
               }}
               onMouseLeave={() => {
-                setIsHovered((prev) => ({ ...prev, terminal: false }));
+                setIsHovered((prev) => ({ ...prev, profilePic: false }));
               }}
             >
-              <HandDrawnBorder isActive={hoverState.terminal} />
-              <HandDrawnCorners isActive={hoverState.terminal} />
+              <HandDrawnBorder isActive={hoverState.profilePic} />
+              <HandDrawnCorners isActive={hoverState.profilePic} />
 
-              {/* Terminal Header */}
+              {/* Profile Header */}
               <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-black/80 relative transition-all duration-500 ease-in-out">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className="flex gap-1.5">
                       <motion.div
                         animate={{
-                          scale: hoverState.terminal ? [1, 1.2, 1] : 1,
+                          scale: hoverState.profilePic ? [1, 1.2, 1] : 1,
                         }}
                         transition={{
                           duration: 0.5,
@@ -748,7 +576,7 @@ const HeroSection = () => {
                       />
                       <motion.div
                         animate={{
-                          scale: hoverState.terminal ? [1, 1.2, 1] : 1,
+                          scale: hoverState.profilePic ? [1, 1.2, 1] : 1,
                         }}
                         transition={{
                           duration: 0.5,
@@ -759,7 +587,7 @@ const HeroSection = () => {
                       />
                       <motion.div
                         animate={{
-                          scale: hoverState.terminal ? [1, 1.2, 1] : 1,
+                          scale: hoverState.profilePic ? [1, 1.2, 1] : 1,
                         }}
                         transition={{
                           duration: 0.5,
@@ -770,10 +598,10 @@ const HeroSection = () => {
                       />
                     </div>
                     <div className="flex items-center gap-2 relative">
-                      <Terminal className="w-4 h-4 sm:w-5 sm:h-5 text-white/80 transition-colors duration-300 ease-in-out" />
+                      <User className="w-4 h-4 sm:w-5 sm:h-5 text-white/80 transition-colors duration-300 ease-in-out" />
                       <span className="text-sm font-medium text-white/90 tracking-wide relative inline-block transition-all duration-300 ease-in-out">
-                        TERMINAL
-                        <HandDrawnUnderline isActive={hoverState.terminal} />
+                        PROFILE
+                        <HandDrawnUnderline isActive={hoverState.profilePic} />
                       </span>
                     </div>
                   </div>
@@ -781,7 +609,7 @@ const HeroSection = () => {
                     <motion.div
                       animate={{
                         opacity: [1, 0.5, 1],
-                        rotate: hoverState.terminal ? [0, 10, 0] : 0,
+                        rotate: hoverState.profilePic ? [0, 10, 0] : 0,
                       }}
                       transition={{
                         duration: 1.5,
@@ -789,143 +617,137 @@ const HeroSection = () => {
                         ease: "easeInOut",
                       }}
                     >
-                      <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-white/60 transition-colors duration-300 ease-in-out" />
+                      <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-white/60 transition-colors duration-300 ease-in-out" />
                     </motion.div>
                     <span className="text-xs text-white/40 font-mono transition-all duration-300 ease-in-out">
-                      READY
+                      ONLINE
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Terminal Content with auto-scroll */}
-              <div className="p-4 sm:p-6 font-mono transition-all duration-300 ease-in-out">
-                <div className="h-48 sm:h-64 overflow-y-auto mb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent transition-all duration-300 ease-in-out">
-                  <div className="space-y-1 transition-all duration-300 ease-in-out">
-                    {terminalHistory.map((item, index) => (
-                      <div
-                        key={index}
-                        className={`transition-all duration-300 ease-in-out ${
-                          item.type === "input"
-                            ? "text-white/90 relative"
-                            : "text-white/60"
-                        }`}
-                      >
-                        {item.text}
-                        {item.type === "input" &&
-                          index === terminalHistory.length - 1 && (
-                            <motion.span
-                              animate={{ opacity: [1, 0, 1] }}
-                              transition={{
-                                duration: 1,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                              }}
-                              className="ml-1 inline-block w-2 h-4 bg-white/80 transition-all duration-300 ease-in-out"
-                            />
-                          )}
-                      </div>
-                    ))}
-                    {/* This div triggers the auto-scroll */}
-                    <div ref={terminalEndRef} />
-                  </div>
-                </div>
-
-                {/* Terminal Input */}
-                <div className="flex items-center border-t border-white/10 pt-3 sm:pt-4 relative transition-all duration-300 ease-in-out">
-                  <span className="text-white/80 font-bold relative transition-all duration-300 ease-in-out">
-                    $
-                    <motion.div
-                      animate={{ scale: hoverState.terminal ? [1, 1.5, 1] : 1 }}
-                      transition={{
-                        duration: 0.5,
-                        ease: "easeInOut",
-                      }}
-                      className="absolute -top-1 -right-1 w-1 h-1 bg-white/60 rounded-full transition-all duration-300 ease-in-out"
-                    />
-                  </span>
-                  <input
-                    type="text"
-                    value={terminalInput}
-                    onChange={(e) => setTerminalInput(e.target.value)}
-                    onKeyDown={handleTerminalSubmit}
-                    className="flex-1 bg-transparent border-none outline-none text-white px-2 sm:px-3 font-mono text-sm sm:text-base placeholder-white/30 transition-all duration-300 ease-in-out"
-                    placeholder="Type a command..."
-                    autoFocus
-                  />
+              {/* BIG Profile Picture with Animations */}
+              <div className="p-4 sm:p-6 lg:p-8 transition-all duration-300 ease-in-out">
+                <div className="relative flex justify-center items-center">
+                  {/* Outer Glow Ring - BIGGER */}
                   <motion.div
                     animate={{
-                      opacity: [1, 0.3, 1],
-                      rotate: hoverState.terminal ? [0, 180, 0] : 0,
+                      scale: [1, 1.1, 1],
+                      opacity: [0.3, 0.6, 0.3],
                     }}
                     transition={{
-                      duration: 1.2,
+                      duration: 3,
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
-                    className="w-1 h-4 sm:w-2 sm:h-5 bg-white/60 relative transition-all duration-300 ease-in-out"
+                    className="absolute w-80 h-80 sm:w-96 sm:h-96 lg:w-[28rem] lg:h-[28rem] rounded-full border border-white/10"
+                  />
+
+                  {/* Middle Ring - BIGGER */}
+                  <motion.div
+                    animate={{
+                      rotate: 360,
+                    }}
+                    transition={{
+                      duration: 20,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="absolute w-72 h-72 sm:w-88 sm:h-88 lg:w-[26rem] lg:h-[26rem]"
                   >
-                    <svg
-                      className="absolute -top-2 left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-in-out"
-                      width="8"
-                      height="4"
-                      viewBox="0 0 8 4"
-                    >
-                      <path
-                        d="M4,0 L8,4 L0,4 Z"
-                        fill="white"
-                        fillOpacity="0.6"
-                        className="transition-all duration-300 ease-in-out"
+                    <svg className="w-full h-full" viewBox="0 0 100 100">
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="49"
+                        fill="none"
+                        stroke="rgba(255,255,255,0.1)"
+                        strokeWidth="0.5"
+                        strokeDasharray="2,4"
                       />
                     </svg>
                   </motion.div>
+
+                  {/* BIG Main Profile Picture */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="relative w-72 h-72 sm:w-80 sm:h-80 lg:w-96 lg:h-96 rounded-full overflow-hidden border-4 border-white/20 bg-black shadow-2xl"
+                    animate={{
+                      boxShadow: hoverState.profilePic
+                        ? [
+                            "0 0 30px rgba(255,255,255,0.2)",
+                            "0 0 60px rgba(255,255,255,0.3)",
+                            "0 0 30px rgba(255,255,255,0.2)",
+                          ]
+                        : "0 0 30px rgba(255,255,255,0.1)",
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                    }}
+                  >
+                    {/* Floating Particles */}
+                    <motion.div
+                      className="absolute inset-0"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.5 }}
+                      transition={{ duration: 1 }}
+                    >
+                      {[...Array(20)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute w-1.5 h-1.5 bg-white rounded-full"
+                          initial={{
+                            x: Math.random() * 300 - 150,
+                            y: Math.random() * 300 - 150,
+                            scale: 0,
+                          }}
+                          animate={{
+                            x: [
+                              Math.random() * 300 - 150,
+                              Math.random() * 300 - 150,
+                            ],
+                            y: [
+                              Math.random() * 300 - 150,
+                              Math.random() * 300 - 150,
+                            ],
+                            scale: [0, 1, 0],
+                          }}
+                          transition={{
+                            duration: Math.random() * 3 + 2,
+                            repeat: Infinity,
+                            delay: Math.random() * 2,
+                          }}
+                        />
+                      ))}
+                    </motion.div>
+
+                    {/* Main Image - BIG */}
+                    <img
+                      src={logo}
+                      alt="Profile"
+                      className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
+                    />
+
+                    {/* Inner Glow */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent mix-blend-overlay" />
+                  </motion.div>
                 </div>
 
-                {/* Quick Commands */}
-                <div className="flex flex-wrap gap-2 mt-4 transition-all duration-300 ease-in-out">
-                  {["help", "about", "skills", "projects"].map((cmd) => (
-                    <motion.button
-                      key={cmd}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleQuickCommand(cmd)}
-                      className="px-2 sm:px-3 py-1 sm:py-1.5 bg-white/5 text-white/70 rounded-lg text-xs border border-white/10 hover:border-white/30 hover:text-white transition-all duration-500 ease-in-out font-medium tracking-wide relative group/button"
-                      onMouseEnter={() => {
-                        setIsHovered((prev) => ({ ...prev, [cmd]: true }));
-                      }}
-                      onMouseLeave={() => {
-                        setIsHovered((prev) => ({ ...prev, [cmd]: false }));
-                      }}
-                    >
-                      {cmd}
-                      <motion.div
-                        className="absolute -bottom-1 left-0 right-0 h-px overflow-hidden"
-                        initial={{ scaleX: 0 }}
-                        animate={{ scaleX: hoverState[cmd] ? 1 : 0 }}
-                        transition={{
-                          duration: 0.3,
-                          ease: "easeInOut",
-                        }}
-                      >
-                        <svg
-                          width="100%"
-                          height="2"
-                          className="transition-all duration-300 ease-in-out"
-                        >
-                          <path
-                            d="M0,1 Q5,0 10,1 T20,0.5 T30,1.5"
-                            fill="none"
-                            stroke="white"
-                            strokeWidth="1"
-                            strokeLinecap="round"
-                            strokeDasharray="2,2"
-                            className="transition-all duration-300 ease-in-out"
-                          />
-                        </svg>
-                      </motion.div>
-                    </motion.button>
-                  ))}
-                </div>
+                {/* Name and Title under picture */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-center mt-8"
+                >
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                    {content.name}
+                  </h2>
+                  <p className="text-white/70 text-base sm:text-lg">
+                    {content.title}
+                  </p>
+                </motion.div>
               </div>
             </motion.div>
 
@@ -940,7 +762,7 @@ const HeroSection = () => {
                 {
                   icon: Code2,
                   title: "FULL STACK",
-                  desc: "React • Node.js • TypeScript",
+                  desc: "React • Node.js • Express",
                   bg: "bg-black/40",
                   border: "border-white/10",
                   iconColor: "text-white/80",
@@ -996,15 +818,14 @@ const HeroSection = () => {
             </motion.div>
           </div>
 
-          {/* Right Column - Profile & Details */}
+          {/* Right Column - Details & Info */}
           <div className="space-y-6 lg:space-y-8 transition-all duration-300 ease-in-out">
-            {/* Profile Header */}
+            {/* Status Badge */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
             >
-              {/* Status Badge */}
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -1090,146 +911,56 @@ const HeroSection = () => {
               </p>
             </motion.div>
 
-            {/* Profile Photo & Tech Stack */}
+            {/* Tech Stack Grid - Updated with Express */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
               className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-6 hover:border-white/20 transition-all duration-500 ease-in-out relative group"
               onMouseEnter={() => {
-                setIsHovered((prev) => ({ ...prev, profile: true }));
+                setIsHovered((prev) => ({ ...prev, techStack: true }));
               }}
               onMouseLeave={() => {
-                setIsHovered((prev) => ({ ...prev, profile: false }));
+                setIsHovered((prev) => ({ ...prev, techStack: false }));
               }}
             >
-              <HandDrawnBorder isActive={hoverState.profile} />
+              <HandDrawnBorder isActive={hoverState.techStack} />
 
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 transition-all duration-300 ease-in-out">
-                {/* Profile Photo with Logo */}
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative group/photo transition-all duration-500 ease-in-out"
-                >
-                  <div className="w-16 h-16 sm:w-30 sm:h-24 rounded-lg overflow-hidden border-2 border-white/20 bg-black flex items-center justify-center group-hover/photo:border-white/40 transition-all duration-500 ease-in-out ">
-                    <img
-                      src={logo}
-                      alt="Logo"
-                      className="w-full h-full object-contain filter brightness-0 invert group-hover/photo:scale-110 transition-all duration-500 ease-in-out"
-                    />
-                  </div>
+              <div className="mb-4 flex items-center gap-2">
+                <Cpu className="w-5 h-5 text-white/80" />
+                <span className="text-sm font-bold text-white/90 tracking-wide">
+                  TECH STACK
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                {[
+                  { Icon: FaReact, name: "React", color: "#61DAFB" },
+                  { Icon: SiTypescript, name: "TypeScript", color: "#3178C6" },
+                  { Icon: SiExpress, name: "Express", color: "#FFFFFF" },
+                  { Icon: FaNodeJs, name: "Node.js", color: "#339933" },
+                  { Icon: SiTailwindcss, name: "Tailwind", color: "#06B6D4" },
+                  { Icon: SiMongodb, name: "MongoDB", color: "#47A248" },
+                  { Icon: SiNextdotjs, name: "Next.js", color: "#000000" },
+                  { Icon: SiDocker, name: "Docker", color: "#2496ED" },
+                  { Icon: SiRedux, name: "Redux", color: "#764ABC" },
+                  { Icon: SiPostgresql, name: "PostgreSQL", color: "#4169E1" },
+                  { Icon: SiVite, name: "Vite", color: "#646CFF" },
+                  { Icon: SiJavascript, name: "JavaScript", color: "#F7DF1E" },
+                ].map((tech, index) => (
                   <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                    className="absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-white/60 rounded-full border-2 border-black transition-all duration-300 ease-in-out"
-                  />
-                </motion.div>
-
-                {/* Tech Icons */}
-                <div className="flex-1 w-full transition-all duration-300 ease-in-out">
-                  <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4 justify-center sm:justify-start transition-all duration-300 ease-in-out">
-                    {[
-                      { Icon: FaReact, color: "text-white/80", name: "React" },
-                      {
-                        Icon: SiTypescript,
-                        color: "text-white/60",
-                        name: "TypeScript",
-                      },
-                      {
-                        Icon: FaNodeJs,
-                        color: "text-white/80",
-                        name: "Node.js",
-                      },
-                      {
-                        Icon: SiTailwindcss,
-                        color: "text-white/60",
-                        name: "Tailwind",
-                      },
-                      {
-                        Icon: SiMongodb,
-                        color: "text-white/80",
-                        name: "MongoDB",
-                      },
-                      {
-                        Icon: SiJavascript,
-                        color: "text-white/60",
-                        name: "JavaScript",
-                      },
-                    ].map((tech, index) => (
-                      <motion.div
-                        key={index}
-                        whileHover={{ y: -5, scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="group/tech relative transition-all duration-500 ease-in-out"
-                        onMouseEnter={() => {
-                          setIsHovered((prev) => ({
-                            ...prev,
-                            [`tech${index}`]: true,
-                          }));
-                        }}
-                        onMouseLeave={() => {
-                          setIsHovered((prev) => ({
-                            ...prev,
-                            [`tech${index}`]: false,
-                          }));
-                        }}
-                      >
-                        <div className="p-2 bg-white/5 border border-white/10 rounded-lg hover:border-white/30 transition-all duration-500 ease-in-out relative">
-                          <tech.Icon
-                            className={`w-4 h-4 sm:w-5 sm:h-5 ${tech.color} group-hover/tech:text-white transition-colors duration-500 ease-in-out`}
-                          />
-                          <motion.svg
-                            className="absolute inset-0 w-full h-full transition-all duration-500 ease-in-out"
-                            viewBox="0 0 100 100"
-                            initial={{ opacity: 0 }}
-                            animate={{
-                              opacity: hoverState[`tech${index}`] ? 1 : 0,
-                            }}
-                            transition={{
-                              duration: 0.3,
-                              ease: "easeInOut",
-                            }}
-                          >
-                            <path
-                              d="M10,10 Q30,5 50,10 T90,15 T90,90 T10,90 T10,10"
-                              fill="none"
-                              stroke="white"
-                              strokeWidth="1"
-                              strokeOpacity="0.5"
-                              strokeLinecap="round"
-                              strokeDasharray="3,2"
-                              className="transition-all duration-300 ease-in-out"
-                            />
-                          </motion.svg>
-                        </div>
-                        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover/tech:opacity-100 transition-all duration-500 ease-in-out pointer-events-none">
-                          <span className="text-xs bg-black text-white/90 px-2 py-1 rounded border border-white/10 whitespace-nowrap relative transition-all duration-300 ease-in-out">
-                            {tech.name}
-                            <svg
-                              className="absolute -top-2 left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-in-out"
-                              width="8"
-                              height="4"
-                              viewBox="0 0 8 4"
-                            >
-                              <path
-                                d="M4,0 L8,4 L0,4 Z"
-                                fill="black"
-                                stroke="white"
-                                strokeWidth="0.5"
-                                className="transition-all duration-300 ease-in-out"
-                              />
-                            </svg>
-                          </span>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
+                    key={index}
+                    whileHover={{ scale: 1.1, y: -5 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex flex-col items-center gap-2 p-3 bg-white/5 border border-white/10 rounded-lg hover:border-white/30 transition-all duration-300 ease-in-out"
+                  >
+                    <tech.Icon
+                      className="w-6 h-6"
+                      style={{ color: tech.color }}
+                    />
+                    <span className="text-xs text-white/70">{tech.name}</span>
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
 
@@ -1282,7 +1013,7 @@ const HeroSection = () => {
                 </span>
               </motion.button>
 
-              {/* Resume Button - Added */}
+              {/* Resume Button */}
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}

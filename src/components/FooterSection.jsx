@@ -228,7 +228,10 @@ const FooterSection = () => {
   );
 
   return (
-    <div ref={sectionRef} className="relative bg-black overflow-hidden py-12">
+    <footer
+      ref={sectionRef}
+      className="relative bg-black overflow-hidden py-12"
+    >
       <FloatingParticles />
 
       <div className="relative z-10">
@@ -585,7 +588,7 @@ const FooterSection = () => {
           </motion.button>
         )}
       </AnimatePresence>
-    </div>
+    </footer>
   );
 };
 
