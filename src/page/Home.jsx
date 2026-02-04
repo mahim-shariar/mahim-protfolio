@@ -71,11 +71,6 @@ const Home = () => {
         <section id="contact" className="scroll-mt-16">
           <ContactSection />
         </section>
-
-        {/* Footer Section */}
-        <section className="scroll-mt-16">
-          <FooterSection />
-        </section>
       </div>
     </div>
   );
