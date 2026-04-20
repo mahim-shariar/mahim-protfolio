@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
 import {
   Calendar, Clock, Video, Shield, Zap, CheckCircle,
   Github, Linkedin, Twitter, Instagram, Mail,
@@ -146,6 +146,53 @@ const CopyEmail = () => {
   );
 };
 
+/* ─── Benefit card with 3D tilt ─── */
+const BenefitCard = ({ benefit, index, isInView }) => {
+  const BIcon = benefit.icon;
+  const rotX = useMotionValue(0);
+  const rotY = useMotionValue(0);
+  const glowX = useMotionValue(50);
+  const glowY = useMotionValue(50);
+  const spX = useSpring(rotX, { stiffness: 280, damping: 24 });
+  const spY = useSpring(rotY, { stiffness: 280, damping: 24 });
+  const shimmer = useMotionTemplate`radial-gradient(circle at ${glowX}% ${glowY}%, rgba(255,255,255,0.06), transparent 60%)`;
+
+  const onMove = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    rotX.set((y - 0.5) * -7);
+    rotY.set((x - 0.5) * 7);
+    glowX.set(x * 100);
+    glowY.set(y * 100);
+  };
+  const onLeave = () => { rotX.set(0); rotY.set(0); };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 12 }}
+      animate={isInView ? { opacity: 1, x: 0 } : {}}
+      transition={{ duration: 0.4, delay: 0.3 + index * 0.07 }}
+      style={{ transformPerspective: 800, rotateX: spX, rotateY: spY, transformStyle: "preserve-3d" }}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      className="group relative flex items-start gap-3 p-3 rounded-xl border border-white/5 bg-white/1.5 hover:border-white/10 hover:bg-white/3 transition-all duration-200 overflow-hidden"
+    >
+      <motion.div
+        className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ background: shimmer }}
+      />
+      <div className="relative z-10 w-8 h-8 rounded-lg bg-white/5 group-hover:bg-white/10 group-hover:scale-110 flex items-center justify-center shrink-0 transition-all duration-200">
+        <BIcon className="w-3.5 h-3.5 text-white/45 group-hover:text-white/70 transition-colors duration-200" />
+      </div>
+      <div className="relative z-10">
+        <div className="text-xs font-semibold text-white/65 mb-0.5">{benefit.title}</div>
+        <div className="text-[11px] text-white/30 leading-relaxed">{benefit.desc}</div>
+      </div>
+    </motion.div>
+  );
+};
+
 /* ─── Main ─── */
 const ContactSection = () => {
   const [showCalendar, setShowCalendar] = useState(false);
@@ -168,6 +215,37 @@ const ContactSection = () => {
       {/* Dot grid */}
       <div className="absolute inset-0 opacity-[0.025] pointer-events-none"
         style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+
+      {/* Aurora orbs */}
+      <motion.div
+        className="absolute pointer-events-none"
+        animate={{ x: [0, 30, -20, 0], y: [0, -20, 15, 0], scale: [1, 1.12, 0.95, 1] }}
+        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          width: 550, height: 550, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.045) 0%, transparent 70%)",
+          filter: "blur(90px)", top: "-10%", left: "-8%",
+        }}
+      />
+      <motion.div
+        className="absolute pointer-events-none"
+        animate={{ x: [0, -22, 14, 0], y: [0, 18, -12, 0], scale: [1, 0.94, 1.08, 1] }}
+        transition={{ duration: 28, repeat: Infinity, ease: "easeInOut", delay: 6 }}
+        style={{
+          width: 500, height: 500, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.035) 0%, transparent 70%)",
+          filter: "blur(90px)", bottom: "0%", right: "-5%",
+        }}
+      />
+
+      {/* Noise grain */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.025] mix-blend-overlay" style={{ zIndex: 1 }}>
+        <filter id="contact-noise">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#contact-noise)" />
+      </svg>
 
       <div className="relative z-10 container mx-auto px-4 max-w-6xl">
 
@@ -273,26 +351,9 @@ const ContactSection = () => {
                 <CheckCircle className="w-3.5 h-3.5 text-white/30" />
                 <span className="text-[11px] font-mono text-white/30 tracking-[0.15em] uppercase">What to expect</span>
               </div>
-              {BENEFITS.map((b, i) => {
-                const BIcon = b.icon;
-                return (
-                  <motion.div
-                    key={b.title}
-                    initial={{ opacity: 0, x: 12 }}
-                    animate={isInView ? { opacity: 1, x: 0 } : {}}
-                    transition={{ duration: 0.4, delay: 0.3 + i * 0.07 }}
-                    className="group flex items-start gap-3 p-3 rounded-xl border border-white/5 bg-white/[0.015] hover:border-white/10 hover:bg-white/[0.03] transition-all duration-200"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-white/[0.05] group-hover:bg-white/10 flex items-center justify-center shrink-0 transition-colors duration-200">
-                      <BIcon className="w-3.5 h-3.5 text-white/45 group-hover:text-white/70 transition-colors duration-200" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-white/65 mb-0.5">{b.title}</div>
-                      <div className="text-[11px] text-white/30 leading-relaxed">{b.desc}</div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+              {BENEFITS.map((b, i) => (
+                <BenefitCard key={b.title} benefit={b} index={i} isInView={isInView} />
+              ))}
             </div>
 
             {/* Quick info strip */}
