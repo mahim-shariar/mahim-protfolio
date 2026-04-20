@@ -1,934 +1,381 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import {
-  Search,
-  Palette,
-  Code2,
-  TestTube,
-  Rocket,
-  Settings,
-  Target,
-  Clock,
-  Users,
-  Shield,
-  ArrowRight,
-  Terminal,
-  ChevronRight,
-  Zap,
-  Cpu,
-  Database,
-  Cloud,
-  Sparkles,
+  Search, Palette, Code2, TestTube, Rocket, Settings,
+  ArrowRight, Sparkles,
 } from "lucide-react";
 
-const ProcessSection = () => {
-  const containerRef = useRef(null);
-  const sectionRef = useRef(null);
-  const [activeStep, setActiveStep] = useState(0);
-  const [isHovered, setIsHovered] = useState({});
-  const [isInView, setIsInView] = useState(false);
+const STEPS = [
+  {
+    number: "01",
+    title: "Discovery & Analysis",
+    description: "Deep dive into your business needs, goals, and target audience. We map out requirements, constraints, and success criteria before writing a single line of code.",
+    icon: Search,
+    tags: ["User Research", "Market Analysis", "Planning", "Strategy"],
+  },
+  {
+    number: "02",
+    title: "UI/UX Design",
+    description: "Crafting intuitive interfaces and seamless user experiences. Every interaction is purposeful — wireframes, prototypes, and real user feedback before development begins.",
+    icon: Palette,
+    tags: ["Figma", "Wireframes", "Prototypes", "User Testing"],
+  },
+  {
+    number: "03",
+    title: "Development",
+    description: "Building robust, scalable solutions with modern technologies. Clean architecture, readable code, and rigorous code reviews at every step.",
+    icon: Code2,
+    tags: ["React", "Node.js", "TypeScript", "AWS"],
+  },
+  {
+    number: "04",
+    title: "Quality Assurance",
+    description: "Rigorous testing to ensure flawless performance and security. Unit tests, integration tests, and real-device testing before anything ships.",
+    icon: TestTube,
+    tags: ["Jest", "Cypress", "Security Audit", "Performance"],
+  },
+  {
+    number: "05",
+    title: "Deployment",
+    description: "Seamless launch with zero-downtime releases and full monitoring from day one. CI/CD pipelines, automated rollbacks, and live dashboards.",
+    icon: Rocket,
+    tags: ["Docker", "CI/CD", "Monitoring", "Analytics"],
+  },
+  {
+    number: "06",
+    title: "Support & Evolution",
+    description: "Continuous improvement, updates, and scaling as your business grows. Your product stays fast, secure, and relevant long after launch.",
+    icon: Settings,
+    tags: ["Maintenance", "Updates", "Scaling", "Performance Tuning"],
+  },
+];
 
-  // Intersection Observer for section entrance
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      {
-        threshold: 0.1,
-        rootMargin: "0px 0px -100px 0px",
-      }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
-  }, []);
-
-  const steps = [
-    {
-      number: "01",
-      title: "Discovery & Analysis",
-      description:
-        "Deep dive into your business needs, goals, and target audience.",
-      icon: Search,
-      highlights: ["Research", "Strategy", "Planning"],
-      tech: ["User Research", "Market Analysis", "Requirement Gathering"],
-    },
-    {
-      number: "02",
-      title: "UI/UX Design",
-      description:
-        "Crafting intuitive interfaces and seamless user experiences.",
-      icon: Palette,
-      highlights: ["Wireframes", "Prototypes", "User Testing"],
-      tech: ["Figma", "Adobe XD", "User Flows"],
-    },
-    {
-      number: "03",
-      title: "Development",
-      description:
-        "Building robust, scalable solutions with modern technologies.",
-      icon: Code2,
-      highlights: ["Frontend", "Backend", "DevOps"],
-      tech: ["React", "Node.js", "AWS"],
-    },
-    {
-      number: "04",
-      title: "Quality Assurance",
-      description:
-        "Rigorous testing to ensure flawless performance and security.",
-      icon: TestTube,
-      highlights: ["Testing", "Security", "Performance"],
-      tech: ["Jest", "Cypress", "Security Audits"],
-    },
-    {
-      number: "05",
-      title: "Deployment",
-      description: "Seamless launch and optimization for maximum impact.",
-      icon: Rocket,
-      highlights: ["CI/CD", "Monitoring", "Analytics"],
-      tech: ["Docker", "Kubernetes", "Google Analytics"],
-    },
-    {
-      number: "06",
-      title: "Support & Evolution",
-      description: "Continuous improvement, updates, and scaling solutions.",
-      icon: Settings,
-      highlights: ["Maintenance", "Updates", "Scaling"],
-      tech: ["Monitoring", "Updates", "Performance Tuning"],
-    },
-  ];
-
-  const principles = [
-    {
-      icon: Zap,
-      title: "Fast",
-      description: "Rapid development without sacrificing quality",
-    },
-    {
-      icon: Cpu,
-      title: "Scalable",
-      description: "Built to grow with your business needs",
-    },
-    {
-      icon: Database,
-      title: "Reliable",
-      description: "99.9% uptime and robust architecture",
-    },
-    {
-      icon: Cloud,
-      title: "Modern",
-      description: "Latest technologies and best practices",
-    },
-  ];
-
-  // Scroll animations
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  const stepProgress = useTransform(
-    scrollYProgress,
-    [0, 1],
-    [0, steps.length - 1]
+/* ─── Step node with rotating ring ─── */
+const StepNode = ({ step, index, isInView }) => {
+  const Icon = step.icon;
+  return (
+    <motion.div
+      initial={{ scale: 0, opacity: 0 }}
+      animate={isInView ? { scale: 1, opacity: 1 } : {}}
+      transition={{ duration: 0.5, delay: 0.15, type: "spring", stiffness: 180, damping: 14 }}
+      className="relative z-10 flex items-center justify-center mt-6"
+    >
+      {/* Outer rotating dashed ring */}
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+        className="absolute w-14 h-14 rounded-full border border-dashed border-white/[0.08]"
+      />
+      {/* Slower counter-rotate */}
+      <motion.div
+        animate={{ rotate: -360 }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute w-10 h-10 rounded-full border border-dotted border-white/[0.06]"
+      />
+      {/* Pulse glow on enter */}
+      <motion.div
+        initial={{ scale: 0.5, opacity: 0.6 }}
+        animate={isInView ? { scale: 2.2, opacity: 0 } : {}}
+        transition={{ duration: 0.9, delay: 0.2 }}
+        className="absolute w-10 h-10 rounded-full bg-white/10"
+      />
+      {/* Node circle */}
+      <div className="relative w-10 h-10 rounded-full border border-white/15 bg-black flex items-center justify-center">
+        <Icon className="w-4 h-4 text-white/50" />
+        {/* Inner glow dot */}
+        <motion.div
+          animate={{ opacity: [0.3, 0.7, 0.3] }}
+          transition={{ duration: 2.5, repeat: Infinity, delay: index * 0.3 }}
+          className="absolute inset-0 rounded-full bg-white/5"
+        />
+      </div>
+    </motion.div>
   );
+};
 
-  // Scroll-based opacity for sections
-  const headerOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.8]);
-  const principlesOpacity = useTransform(scrollYProgress, [0.5, 0.8], [0, 1]);
+/* ─── Step card ─── */
+const StepCard = ({ step, isInView, fromLeft }) => (
+  <motion.div
+    initial={{ opacity: 0, x: fromLeft ? -40 : 40, y: 10 }}
+    animate={isInView ? { opacity: 1, x: 0, y: 0 } : {}}
+    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+    whileHover={{ y: -4, transition: { duration: 0.25 } }}
+    className="group rounded-2xl border border-white/6 bg-white/[0.02] p-5 hover:border-white/14 hover:bg-white/[0.04] transition-colors duration-300 cursor-default"
+  >
+    {/* Number + title row */}
+    <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="min-w-0">
+        <motion.span
+          initial={{ opacity: 0, y: 6 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.18 }}
+          className="font-mono text-[10px] text-white/20 tracking-[0.2em] uppercase block"
+        >
+          Step {step.number}
+        </motion.span>
+        <motion.h3
+          initial={{ opacity: 0, y: 8 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.22, duration: 0.45 }}
+          className="text-base font-bold text-white/85 mt-0.5 leading-snug"
+        >
+          {step.title}
+        </motion.h3>
+      </div>
+      {/* Watermark number */}
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={isInView ? { opacity: 1 } : {}}
+        transition={{ delay: 0.35, duration: 0.6 }}
+        className="text-[2.8rem] font-bold text-white/[0.04] leading-none select-none shrink-0 -mt-1 group-hover:text-white/[0.07] transition-colors duration-300"
+      >
+        {step.number}
+      </motion.span>
+    </div>
 
-  useEffect(() => {
-    const unsubscribe = stepProgress.on("change", (latest) => {
-      setActiveStep(Math.floor(latest));
-    });
-    return () => unsubscribe();
-  }, [stepProgress]);
+    {/* Description */}
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={isInView ? { opacity: 1 } : {}}
+      transition={{ delay: 0.28, duration: 0.5 }}
+      className="text-white/38 text-[13px] leading-relaxed mb-4"
+    >
+      {step.description}
+    </motion.p>
 
-  // Hand-drawn border component for individual cards
-  const HandDrawnBorder = ({ isActive }) => (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-      <svg
-        className="absolute top-0 left-0 w-full h-1 transition-all duration-700 ease-in-out"
-        viewBox="0 0 100 1"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0,0.5 Q10,0.2 20,0.5 T40,0.3 T60,0.6 T80,0.4 T100,0.5"
-          fill="none"
-          stroke="white"
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.6 : 0.1}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
-      <svg
-        className="absolute top-0 right-0 w-1 h-full transition-all duration-700 ease-in-out"
-        viewBox="0 0 1 100"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0.5,0 Q0.8,10 0.5,20 T0.7,40 T0.4,60 T0.6,80 T0.5,100"
-          fill="none"
-          stroke="white"
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.6 : 0.1}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
-      <svg
-        className="absolute bottom-0 left-0 w-full h-1 transition-all duration-700 ease-in-out"
-        viewBox="0 0 100 1"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0,0.5 Q15,0.7 30,0.4 T50,0.6 T70,0.3 T90,0.7 T100,0.5"
-          fill="none"
-          stroke="white"
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.6 : 0.1}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
-      <svg
-        className="absolute top-0 left-0 w-1 h-full transition-all duration-700 ease-in-out"
-        viewBox="0 0 1 100"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0.5,0 Q0.3,15 0.5,30 T0.3,50 T0.6,70 T0.4,90 T0.5,100"
-          fill="none"
-          stroke="white"
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.6 : 0.1}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
+    {/* Tags — staggered */}
+    <div className="flex flex-wrap gap-1.5">
+      {step.tags.map((tag, ti) => (
+        <motion.span
+          key={tag}
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={isInView ? { opacity: 1, scale: 1 } : {}}
+          transition={{ delay: 0.32 + ti * 0.07, duration: 0.3 }}
+          className="px-2.5 py-1 border border-white/6 bg-white/[0.02] rounded-lg text-[10px] font-mono text-white/38 group-hover:border-white/10 group-hover:text-white/50 transition-colors duration-300"
+        >
+          {tag}
+        </motion.span>
+      ))}
+    </div>
+  </motion.div>
+);
+
+/* ─── One full step row ─── */
+const StepRow = ({ step, index }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { amount: 0.35, once: true });
+  const isEven = index % 2 === 0;
+
+  return (
+    <div ref={ref} className="relative grid grid-cols-[1fr_56px_1fr] items-start">
+
+      {/* LEFT */}
+      <div className={`py-5 pr-8 ${isEven ? "opacity-100" : "invisible pointer-events-none"}`}>
+        {isEven && <StepCard step={step} isInView={isInView} fromLeft />}
+      </div>
+
+      {/* CENTER */}
+      <div className="flex flex-col items-center">
+        <StepNode step={step} index={index} isInView={isInView} />
+        {index < STEPS.length - 1 && (
+          <motion.div
+            initial={{ scaleY: 0 }}
+            animate={isInView ? { scaleY: 1 } : {}}
+            transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
+            className="w-px flex-1 min-h-[80px] bg-gradient-to-b from-white/12 to-white/3 origin-top"
+          />
+        )}
+      </div>
+
+      {/* RIGHT */}
+      <div className={`py-5 pl-8 ${!isEven ? "opacity-100" : "invisible pointer-events-none"}`}>
+        {!isEven && <StepCard step={step} isInView={isInView} fromLeft={false} />}
+      </div>
     </div>
   );
+};
 
-  // Hand-drawn corner accents
-  const HandDrawnCornerAccents = () => (
-    <>
-      {/* Top-left corner */}
-      <div className="absolute top-0 left-0 w-48 h-48 opacity-20">
-        <svg width="100%" height="100%" viewBox="0 0 100 100">
-          <path
-            d="M20,10 Q10,10 10,20"
-            fill="none"
-            stroke="white"
-            strokeWidth="0.5"
-            strokeOpacity="0.3"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
+/* ─── Main ─── */
+const ProcessSection = () => {
+  const sectionRef  = useRef(null);
+  const timelineRef = useRef(null);
+  const isInView    = useInView(sectionRef, { amount: 0.05, once: true });
 
-      {/* Top-right corner */}
-      <div className="absolute top-0 right-0 w-48 h-48 opacity-20">
-        <svg width="100%" height="100%" viewBox="0 0 100 100">
-          <path
-            d="M80,10 Q90,10 90,20"
-            fill="none"
-            stroke="white"
-            strokeWidth="0.5"
-            strokeOpacity="0.3"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
+  const { scrollYProgress } = useScroll({
+    target: timelineRef,
+    offset: ["start 80%", "end 20%"],
+  });
 
-      {/* Bottom-left corner */}
-      <div className="absolute bottom-0 left-0 w-48 h-48 opacity-20">
-        <svg width="100%" height="100%" viewBox="0 0 100 100">
-          <path
-            d="M20,90 Q10,90 10,80"
-            fill="none"
-            stroke="white"
-            strokeWidth="0.5"
-            strokeOpacity="0.3"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
+  /* Scroll-driven line */
+  const lineScaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
+  /* Travelling glow dot */
+  const dotY       = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+  const dotOpacity = useTransform(scrollYProgress, [0, 0.05, 0.95, 1], [0, 1, 1, 0]);
 
-      {/* Bottom-right corner */}
-      <div className="absolute bottom-0 right-0 w-48 h-48 opacity-20">
-        <svg width="100%" height="100%" viewBox="0 0 100 100">
-          <path
-            d="M80,90 Q90,90 90,80"
-            fill="none"
-            stroke="white"
-            strokeWidth="0.5"
-            strokeOpacity="0.3"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
-    </>
-  );
-
-  // Floating hand-drawn lines
-  const FloatingHandDrawnLines = () => {
-    const lines = Array.from({ length: 12 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      length: Math.random() * 60 + 40,
-      duration: Math.random() * 20 + 30,
-      delay: Math.random() * 10,
-      opacity: Math.random() * 0.04 + 0.02,
-    }));
-
-    return (
-      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
-        {lines.map((line) => (
-          <motion.div
-            key={line.id}
-            className="absolute"
-            style={{
-              left: `${line.x}%`,
-              top: "-100px",
-              width: line.length,
-              height: 1,
-            }}
-            animate={{
-              y: ["-100px", "120vh"],
-              x: [
-                `${line.x}%`,
-                `${line.x + (Math.random() - 0.5) * 15}%`,
-                `${line.x}%`,
-              ],
-              opacity: [line.opacity, line.opacity * 2, line.opacity],
-            }}
-            transition={{
-              y: {
-                duration: line.duration,
-                repeat: Infinity,
-                ease: "linear",
-                delay: line.delay,
-              },
-              x: {
-                duration: line.duration / 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
-            }}
-          >
-            <svg
-              width="100%"
-              height="1"
-              viewBox="0 0 100 1"
-              preserveAspectRatio="none"
-            >
-              <path
-                d="M0,0.5 Q20,0.2 40,0.5 T60,0.3 T80,0.7 T100,0.5"
-                fill="none"
-                stroke="white"
-                strokeWidth="0.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </motion.div>
-        ))}
-      </div>
-    );
-  };
-
-  // Hand-drawn dot particles
-  const HandDrawnDots = () => {
-    const dots = Array.from({ length: 25 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 3 + 1,
-      duration: Math.random() * 8 + 12,
-      delay: Math.random() * 5,
-      opacity: Math.random() * 0.03 + 0.01,
-    }));
-
-    return (
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {dots.map((dot) => (
-          <motion.div
-            key={dot.id}
-            className="absolute"
-            style={{
-              left: `${dot.x}%`,
-              top: `${dot.y}%`,
-              width: dot.size,
-              height: dot.size,
-              opacity: dot.opacity,
-            }}
-            animate={{
-              y: [0, -20, 0],
-              x: [0, (Math.random() - 0.5) * 10, 0],
-              scale: [1, 1.3, 1],
-            }}
-            transition={{
-              duration: dot.duration,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: dot.delay,
-            }}
-          >
-            <div className="w-full h-full rounded-full bg-white" />
-          </motion.div>
-        ))}
-      </div>
-    );
-  };
-
-  // Animation variants for cards
-  const cardVariants = {
-    hidden: {
-      opacity: 0,
-      y: 60,
-      rotateX: 10,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      rotateX: 0,
-      transition: {
-        duration: 0.8,
-        ease: [0.22, 1, 0.36, 1],
-      },
-    },
-  };
-
-  // Animation for principles cards
-  const principleVariants = {
-    hidden: {
-      opacity: 0,
-      scale: 0.8,
-      y: 30,
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-      },
-    },
+  const scrollToContact = () => {
+    const el = document.getElementById("contact");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
-    <div
-      ref={sectionRef}
-      className="relative w-full min-h-screen bg-black text-white overflow-hidden"
-    >
-      {/* Background Effects */}
-      <HandDrawnCornerAccents />
-      <FloatingHandDrawnLines />
-      <HandDrawnDots />
+    <div ref={sectionRef} className="relative py-24 bg-black overflow-hidden">
+      {/* Dot grid */}
+      <div
+        className="absolute inset-0 opacity-[0.025] pointer-events-none"
+        style={{
+          backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
 
-      {/* Scroll-based Container */}
-      <div ref={containerRef} className="relative z-10">
+      {/* Subtle radial glow centre */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(255,255,255,0.02), transparent)",
+        }}
+      />
+
+      <div className="relative z-10 container mx-auto px-4 max-w-5xl">
+
+        {/* ── Header ── */}
         <motion.div
-          style={{ opacity: headerOpacity }}
-          className="container mx-auto px-4 py-20"
+          initial={{ opacity: 0, y: 22 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.55 }}
+          className="text-center mb-20"
         >
-          {/* Header Section */}
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            className="text-center mb-20"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={isInView ? { opacity: 1, scale: 1 } : {}}
+            transition={{ duration: 0.4 }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.03] mb-5"
           >
-            {/* Badge with hand-drawn border */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={isInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="relative inline-block mb-8"
-            >
-              <div
-                className="relative bg-black border border-white/10 rounded-2xl px-8 py-4 group hover:border-white/20 transition-all duration-700"
-                onMouseEnter={() =>
-                  setIsHovered((prev) => ({ ...prev, header: true }))
-                }
-                onMouseLeave={() =>
-                  setIsHovered((prev) => ({ ...prev, header: false }))
-                }
-              >
-                <HandDrawnBorder isActive={isHovered.header} />
-
-                <div className="flex items-center gap-3">
-                  <Sparkles className="w-5 h-5 text-white/60 group-hover:text-white transition-colors duration-500" />
-                  <span className="text-white/80 font-medium group-hover:text-white transition-colors duration-500">
-                    Development Process
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Main Title */}
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 1, delay: 0.4 }}
-              className="text-5xl md:text-7xl font-bold mb-6"
-            >
-              <span className="text-white">Build. Test. Deploy.</span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="text-xl text-white/60 max-w-3xl mx-auto"
-            >
-              A comprehensive 6-step methodology to transform your ideas into
-              production-ready digital solutions
-            </motion.p>
-
-            {/* Terminal-style progress */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={isInView ? { opacity: 1 } : {}}
-              transition={{ delay: 0.7 }}
-              className="mt-8 flex items-center justify-center gap-4"
-            >
-              <Terminal className="w-5 h-5 text-white/40" />
-              <div className="h-1 w-48 bg-white/10 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: "0%" }}
-                  animate={{ width: "100%" }}
-                  transition={{ duration: 2, delay: 0.9, ease: "easeInOut" }}
-                  className="h-full bg-white"
-                />
-              </div>
-              <span className="text-white/40 font-mono text-sm">
-                Loading Process...
-              </span>
-            </motion.div>
+            <Sparkles className="w-3.5 h-3.5 text-white/40" />
+            <span className="text-[11px] font-mono text-white/40 tracking-[0.15em] uppercase">
+              how i work
+            </span>
           </motion.div>
 
-          {/* Process Timeline */}
-          <div className="relative max-w-6xl mx-auto">
-            {/* Central Timeline Line with scroll animation */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 h-full hidden md:block">
+          <motion.h2
+            initial={{ opacity: 0, y: 14 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.55, delay: 0.08 }}
+            className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3"
+          >
+            Build. Test. Deploy.
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
+            transition={{ duration: 0.5, delay: 0.16 }}
+            className="text-sm text-white/35 font-mono"
+          >
+            <span className="text-white/15">{"// "}</span>
+            a 6-step methodology from idea to production
+          </motion.p>
+        </motion.div>
+
+        {/* ── Desktop timeline ── */}
+        <div ref={timelineRef} className="relative hidden md:block">
+
+          {/* Base (ghost) line */}
+          <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px bg-white/[0.04]" />
+
+          {/* Scroll-filled line */}
+          <motion.div
+            style={{ scaleY: lineScaleY }}
+            className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px origin-top"
+            style={{ scaleY: lineScaleY, background: "linear-gradient(to bottom, rgba(255,255,255,0.3), rgba(255,255,255,0.12), rgba(255,255,255,0.03))" }}
+          />
+          {/* Glow blur copy */}
+          <motion.div
+            style={{ scaleY: lineScaleY }}
+            className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[3px] blur-[3px] origin-top opacity-40"
+            style={{ scaleY: lineScaleY, background: "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(255,255,255,0.1), transparent)" }}
+          />
+
+          {/* Travelling dot */}
+          <motion.div
+            style={{ top: dotY, opacity: dotOpacity }}
+            className="absolute left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+          >
+            <div className="relative -translate-x-1/2 -translate-y-1/2">
+              <div className="w-2 h-2 rounded-full bg-white/80" />
+              <div className="absolute inset-0 w-2 h-2 rounded-full bg-white/40 blur-[3px]" />
+              <div className="absolute -inset-2 rounded-full bg-white/10 blur-[6px]" />
+            </div>
+          </motion.div>
+
+          {/* Step rows */}
+          {STEPS.map((step, i) => (
+            <StepRow key={step.number} step={step} index={i} />
+          ))}
+        </div>
+
+        {/* ── Mobile single column ── */}
+        <div className="md:hidden space-y-4">
+          {STEPS.map((step, i) => {
+            const MIcon = step.icon;
+            return (
               <motion.div
-                className="w-px bg-gradient-to-b from-transparent via-white/10 to-transparent"
-                initial={{ height: "0%" }}
-                whileInView={{ height: "100%" }}
-                viewport={{ once: true }}
-                transition={{ duration: 2, ease: "easeInOut" }}
-              />
-            </div>
-
-            {/* Steps with scroll animations */}
-            <div className="space-y-24">
-              {steps.map((step, index) => {
-                const Icon = step.icon;
-                const isEven = index % 2 === 0;
-
-                return (
-                  <motion.div
-                    key={step.number}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={cardVariants}
-                    className={`relative flex flex-col md:flex-row items-center gap-8 ${
-                      isEven ? "md:flex-row" : "md:flex-row-reverse"
-                    }`}
-                  >
-                    {/* Step Content */}
-                    <div
-                      className={`md:w-1/2 ${isEven ? "md:pr-12" : "md:pl-12"}`}
-                    >
-                      <div
-                        className="relative bg-black border border-white/10 rounded-2xl p-8 hover:border-white/20 transition-all duration-700 group"
-                        onMouseEnter={() =>
-                          setIsHovered((prev) => ({
-                            ...prev,
-                            [`step-${index}`]: true,
-                          }))
-                        }
-                        onMouseLeave={() =>
-                          setIsHovered((prev) => ({
-                            ...prev,
-                            [`step-${index}`]: false,
-                          }))
-                        }
-                      >
-                        <HandDrawnBorder
-                          isActive={isHovered[`step-${index}`]}
-                        />
-
-                        {/* Step header */}
-                        <div className="flex items-start gap-4 mb-6">
-                          <div className="relative">
-                            <div className="absolute inset-0 bg-white/5 rounded-xl blur-sm" />
-                            <motion.div
-                              className="relative w-14 h-14 bg-black border border-white/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500"
-                              whileHover={{ rotate: 5 }}
-                            >
-                              <span className="text-xl font-bold text-white">
-                                {step.number}
-                              </span>
-                            </motion.div>
-                          </div>
-                          <div>
-                            <h3 className="text-2xl font-bold text-white mb-2">
-                              {step.title}
-                            </h3>
-                            <p className="text-white/60">{step.description}</p>
-                          </div>
-                        </div>
-
-                        {/* Tech stack */}
-                        <div className="mb-6">
-                          <h4 className="text-sm font-semibold text-white/40 mb-3">
-                            TECH STACK
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {step.tech.map((tech, i) => (
-                              <motion.span
-                                key={i}
-                                initial={{ opacity: 0, y: 10 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.1 * i }}
-                                whileHover={{ scale: 1.05, y: -2 }}
-                                className="px-3 py-1.5 bg-black border border-white/10 rounded-lg text-sm text-white/70 hover:bg-white/5 transition-all duration-300"
-                              >
-                                {tech}
-                              </motion.span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Highlights */}
-                        <div className="flex flex-wrap gap-2">
-                          {step.highlights.map((highlight, i) => (
-                            <motion.span
-                              key={i}
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              whileInView={{ opacity: 1, scale: 1 }}
-                              viewport={{ once: true }}
-                              transition={{ delay: 0.2 + i * 0.1 }}
-                              whileHover={{ scale: 1.05, y: -2 }}
-                              className="px-4 py-2 bg-black border border-white/10 rounded-full text-sm text-white/80 hover:bg-white/5 transition-all duration-300"
-                            >
-                              {highlight}
-                            </motion.span>
-                          ))}
-                        </div>
-
-                        {/* Hover indicator */}
-                        <motion.div
-                          className="absolute -right-3 top-1/2 transform -translate-y-1/2"
-                          animate={{
-                            x: isHovered[`step-${index}`]
-                              ? isEven
-                                ? -5
-                                : 5
-                              : 0,
-                          }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <ChevronRight
-                            className={`w-6 h-6 text-white/60 ${
-                              isEven ? "rotate-180" : ""
-                            }`}
-                          />
-                        </motion.div>
-                      </div>
-                    </div>
-
-                    {/* Timeline Node with scroll animation */}
-                    <div className="absolute left-1/2 transform -translate-x-1/2 z-10 hidden md:block">
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        whileInView={{ scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                        whileHover={{ scale: 1.2 }}
-                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                          activeStep >= index
-                            ? "border-white bg-white"
-                            : "border-white/20 bg-black"
-                        }`}
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                            activeStep >= index ? "bg-black" : "bg-white/20"
-                          }`}
-                        />
-                      </motion.div>
-                    </div>
-
-                    {/* Step Icon with scroll animation */}
-                    <div className="absolute left-1/2 transform -translate-x-1/2 z-20 hidden md:block">
-                      <motion.div
-                        initial={{ rotate: -180, opacity: 0 }}
-                        whileInView={{ rotate: 0, opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8, delay: index * 0.1 }}
-                        className={`p-3 rounded-xl border transition-all duration-500 ${
-                          activeStep >= index
-                            ? "border-white bg-white/10"
-                            : "border-white/10 bg-black"
-                        }`}
-                      >
-                        <Icon
-                          className={`w-6 h-6 transition-all duration-500 ${
-                            activeStep >= index ? "text-white" : "text-white/40"
-                          }`}
-                        />
-                      </motion.div>
-                    </div>
-
-                    {/* Empty spacer */}
-                    <div className="md:w-1/2 hidden md:block" />
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {/* Progress Indicator */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="mt-16 text-center"
-            >
-              <div className="relative inline-block">
-                <div
-                  className="inline-flex items-center gap-4 px-6 py-3 bg-black border border-white/10 rounded-full group hover:border-white/20 transition-all duration-700"
-                  onMouseEnter={() =>
-                    setIsHovered((prev) => ({ ...prev, progress: true }))
-                  }
-                  onMouseLeave={() =>
-                    setIsHovered((prev) => ({ ...prev, progress: false }))
-                  }
-                >
-                  <HandDrawnBorder isActive={isHovered.progress} />
-
-                  <span className="text-white/60 text-sm">Progress</span>
-                  <div className="h-2 w-48 bg-white/10 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: "0%" }}
-                      animate={{
-                        width: `${((activeStep + 1) / steps.length) * 100}%`,
-                      }}
-                      transition={{ duration: 1, ease: "easeInOut" }}
-                      className="h-full bg-white"
-                    />
-                  </div>
-                  <span className="text-white/80 font-mono text-sm">
-                    {activeStep + 1}/{steps.length}
-                  </span>
+                key={step.number}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.45, delay: i * 0.06 }}
+                className="relative pl-11"
+              >
+                <div className="absolute left-3.5 top-0 bottom-0 w-px bg-white/[0.06]" />
+                <div className="absolute left-[7px] top-5 w-7 h-7 rounded-full border border-white/10 bg-black flex items-center justify-center">
+                  <MIcon className="w-3 h-3 text-white/40" />
                 </div>
+                <StepCard step={step} isInView fromLeft />
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* ── CTA ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.55, delay: 0.1 }}
+          className="mt-20 relative rounded-2xl border border-white/8 bg-white/[0.02] overflow-hidden"
+        >
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+
+          <div className="px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div>
+              <h3 className="text-xl font-bold text-white mb-1.5">Ready to Build Together?</h3>
+              <p className="text-white/40 text-sm">Let's discuss your project and create something extraordinary.</p>
+            </div>
+            <button
+              onClick={scrollToContact}
+              className="group flex items-center gap-2.5 px-6 py-3 bg-white text-black text-sm font-semibold rounded-full hover:bg-white/90 transition-colors duration-200 shrink-0"
+            >
+              Start Your Project
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-4 divide-x divide-white/[0.06] border-t border-white/6">
+            {[
+              { value: "50+",  label: "Projects"     },
+              { value: "30+",  label: "Clients"      },
+              { value: "3+",   label: "Years"        },
+              { value: "100%", label: "Success Rate" },
+            ].map((s) => (
+              <div key={s.label} className="flex flex-col items-center gap-1 py-5">
+                <span className="text-xl font-bold text-white/90">{s.value}</span>
+                <span className="text-[9px] font-mono text-white/25 uppercase tracking-widest">{s.label}</span>
               </div>
-            </motion.div>
+            ))}
           </div>
         </motion.div>
 
-        {/* Principles Section with scroll opacity */}
-        <motion.div
-          style={{ opacity: principlesOpacity }}
-          className="container mx-auto px-4 py-20"
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mt-32"
-          >
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">
-                Development Principles
-              </h2>
-              <p className="text-white/60 max-w-xl mx-auto">
-                The core values that guide every project from concept to
-                completion
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {principles.map((principle, index) => {
-                const Icon = principle.icon;
-                return (
-                  <motion.div
-                    key={principle.title}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-50px" }}
-                    variants={principleVariants}
-                    transition={{ delay: index * 0.1 }}
-                    className="group"
-                  >
-                    <div
-                      className="relative bg-black border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all duration-700"
-                      onMouseEnter={() =>
-                        setIsHovered((prev) => ({
-                          ...prev,
-                          [`principle-${index}`]: true,
-                        }))
-                      }
-                      onMouseLeave={() =>
-                        setIsHovered((prev) => ({
-                          ...prev,
-                          [`principle-${index}`]: false,
-                        }))
-                      }
-                    >
-                      <HandDrawnBorder
-                        isActive={isHovered[`principle-${index}`]}
-                      />
-
-                      {/* Icon */}
-                      <div className="w-14 h-14 rounded-lg bg-black border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                        <Icon className="w-7 h-7 text-white" />
-                      </div>
-
-                      {/* Content */}
-                      <h3 className="text-xl font-bold mb-3">
-                        {principle.title}
-                      </h3>
-                      <p className="text-white/60 text-sm">
-                        {principle.description}
-                      </p>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* CTA Section */}
-        <div className="container mx-auto px-4 ">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mt-15 text-center"
-          >
-            <div className="relative max-w-3xl mx-auto">
-              <div
-                className="bg-black border border-white/10 rounded-2xl p-8 group hover:border-white/20 transition-all duration-700"
-                onMouseEnter={() =>
-                  setIsHovered((prev) => ({ ...prev, cta: true }))
-                }
-                onMouseLeave={() =>
-                  setIsHovered((prev) => ({ ...prev, cta: false }))
-                }
-              >
-                <HandDrawnBorder isActive={isHovered.cta} />
-
-                <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                  <div className="text-left">
-                    <h3 className="text-2xl font-bold mb-3">
-                      Ready to Build Together?
-                    </h3>
-                    <p className="text-white/60">
-                      Let's discuss your project and create something
-                      extraordinary
-                    </p>
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="relative px-8 py-3 bg-white text-black font-semibold rounded-lg hover:bg-white/90 transition-all duration-300 flex items-center gap-2 group border border-white"
-                    onMouseEnter={() =>
-                      setIsHovered((prev) => ({ ...prev, button: true }))
-                    }
-                    onMouseLeave={() =>
-                      setIsHovered((prev) => ({ ...prev, button: false }))
-                    }
-                  >
-                    <HandDrawnBorder
-                      isActive={isHovered.button}
-                      color="#000000"
-                    />
-                    <span className="relative">Start Your Project</span>
-                    <ArrowRight className="w-5 h-5 relative group-hover:translate-x-1 transition-transform" />
-                  </motion.button>
-                </div>
-
-                {/* Stats */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3 }}
-                  className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 pt-8 border-t border-white/10"
-                >
-                  {[
-                    { label: "Projects", value: "50+" },
-                    { label: "Clients", value: "30+" },
-                    { label: "Years", value: "5+" },
-                    { label: "Success Rate", value: "100%" },
-                  ].map((stat, index) => (
-                    <div key={index} className="text-center">
-                      <div className="text-2xl font-bold text-white mb-1">
-                        {stat.value}
-                      </div>
-                      <div className="text-sm text-white/40">{stat.label}</div>
-                    </div>
-                  ))}
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Footer */}
-        <div className="container mx-auto px-4 py-20">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.5 }}
-            className="mt-20 text-center"
-          >
-            <div
-              className="inline-flex items-center gap-3 px-6 py-3 bg-black border border-white/10 rounded-full group hover:border-white/20 transition-all duration-700"
-              onMouseEnter={() =>
-                setIsHovered((prev) => ({ ...prev, footer: true }))
-              }
-              onMouseLeave={() =>
-                setIsHovered((prev) => ({ ...prev, footer: false }))
-              }
-            >
-              <HandDrawnBorder isActive={isHovered.footer} />
-
-              <Terminal className="w-4 h-4 text-white/60 group-hover:text-white transition-colors duration-500" />
-              <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors duration-500">
-                $ echo "Process loaded successfully" && echo "Awaiting next
-                command..."
-              </span>
-              <motion.div
-                className="w-2 h-4 bg-white/60 ml-2"
-                animate={{ opacity: [1, 0, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
-            </div>
-          </motion.div>
-        </div>
       </div>
     </div>
   );

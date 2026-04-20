@@ -1,290 +1,245 @@
-import React from "react";
+import React, { memo } from "react";
 import { motion } from "framer-motion";
-import { Terminal, Zap, Sparkles } from "lucide-react";
-// Import React Icons
-import { FaReact, FaNodeJs, FaPython, FaGitAlt, FaAws } from "react-icons/fa";
+import { Terminal, Zap } from "lucide-react";
+import { FaReact, FaNodeJs, FaGitAlt, FaAws } from "react-icons/fa";
 import {
   SiTypescript,
   SiNextdotjs,
   SiTailwindcss,
-  SiGraphql,
   SiDocker,
   SiPostgresql,
   SiMongodb,
   SiRedis,
-  SiKubernetes,
-  SiJest,
-  SiCypress,
   SiExpress,
-  SiNestjs,
   SiFastapi,
   SiSocketdotio,
   SiVercel,
+  SiGraphql,
 } from "react-icons/si";
 import { VscCode } from "react-icons/vsc";
 
-const SkillsSection = () => {
-  // All skills in one continuous array
-  const skills = [
-    { name: "React", icon: FaReact, level: 95 },
-    { name: "TypeScript", icon: SiTypescript, level: 90 },
-    { name: "Next.js", icon: SiNextdotjs, level: 88 },
-    { name: "Node.js", icon: FaNodeJs, level: 92 },
-    { name: "Tailwind CSS", icon: SiTailwindcss, level: 92 },
-    { name: "MongoDB", icon: SiMongodb, level: 88 },
-    { name: "Git", icon: FaGitAlt, level: 95 },
-    { name: "AWS", icon: FaAws, level: 85 },
-    { name: "Express", icon: SiExpress, level: 88 },
-    { name: "FastAPI", icon: SiFastapi, level: 75 },
-    { name: "Socket.io", icon: SiSocketdotio, level: 82 },
-    { name: "Vercel", icon: SiVercel, level: 90 },
-    { name: "VsCode", icon: VscCode, level: 90 },
-  ];
+const CATEGORIES = [
+  {
+    id: "frontend",
+    code: "01",
+    label: "Frontend",
+    skills: [
+      { name: "React", icon: FaReact, level: 95 },
+      { name: "TypeScript", icon: SiTypescript, level: 90 },
+      { name: "Next.js", icon: SiNextdotjs, level: 88 },
+      { name: "Tailwind CSS", icon: SiTailwindcss, level: 92 },
+    ],
+  },
+  {
+    id: "backend",
+    code: "02",
+    label: "Backend",
+    skills: [
+      { name: "Node.js", icon: FaNodeJs, level: 92 },
+      { name: "Express.js", icon: SiExpress, level: 88 },
+      { name: "FastAPI", icon: SiFastapi, level: 75 },
+      { name: "GraphQL", icon: SiGraphql, level: 72 },
+      { name: "Socket.io", icon: SiSocketdotio, level: 82 },
+    ],
+  },
+  {
+    id: "database",
+    code: "03",
+    label: "Database",
+    skills: [
+      { name: "MongoDB", icon: SiMongodb, level: 88 },
+      { name: "PostgreSQL", icon: SiPostgresql, level: 78 },
+      { name: "Redis", icon: SiRedis, level: 70 },
+    ],
+  },
+  {
+    id: "tools",
+    code: "04",
+    label: "Tools & Cloud",
+    skills: [
+      { name: "Git", icon: FaGitAlt, level: 95 },
+      { name: "AWS", icon: FaAws, level: 85 },
+      { name: "Docker", icon: SiDocker, level: 80 },
+      { name: "Vercel", icon: SiVercel, level: 90 },
+      { name: "VS Code", icon: VscCode, level: 95 },
+    ],
+  },
+];
 
-  // Create extended array for smooth looping
-  const extendedSkills = [...skills, ...skills, ...skills];
+const ALL_SKILLS = CATEGORIES.flatMap((c) => c.skills);
+const MARQUEE_SKILLS = [...ALL_SKILLS, ...ALL_SKILLS, ...ALL_SKILLS];
 
-  // Hand-drawn underline effect
-  const HandDrawnUnderline = ({ isActive }) => (
-    <motion.div
-      className="absolute -bottom-1 left-0 right-0 h-px overflow-hidden"
-      initial={{ scaleX: 0 }}
-      animate={{ scaleX: isActive ? 1 : 0 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-    >
-      <svg width="100%" height="2" className="overflow-visible">
-        <path
-          d="M0,1 Q10,0 20,1 T40,0.5 T60,1.5 T80,0.8 T100,1"
-          fill="none"
-          stroke="white"
-          strokeWidth="1"
-          strokeLinecap="round"
-          strokeDasharray="3,2"
-          className="transition-all duration-300 ease-in-out"
-        />
-      </svg>
-    </motion.div>
-  );
+const MarqueeChip = memo(({ skill }) => (
+  <div className="flex items-center gap-2 px-3.5 py-1.5 mx-1.5 rounded-full border border-white/10 bg-white/[0.03] flex-shrink-0">
+    <skill.icon className="w-3.5 h-3.5 text-white/50" />
+    <span className="text-xs font-medium text-white/40 whitespace-nowrap">
+      {skill.name}
+    </span>
+  </div>
+));
 
-  // Single skill badge component
-  const SkillBadge = ({ skill, index }) => {
-    return (
-      <motion.div
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95 }}
-        className="group relative px-5 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl hover:border-white/30 transition-all duration-500 ease-in-out min-w-[140px] mx-2 flex flex-col items-center justify-center"
-      >
-        {/* Icon container with subtle glow on hover */}
-        <div className="relative mb-3">
-          <skill.icon className="w-7 h-7 text-white/80 group-hover:text-white transition-all duration-500 ease-in-out" />
+const SkillRow = memo(({ skill, index }) => (
+  <motion.div
+    initial={{ opacity: 0, x: -8 }}
+    whileInView={{ opacity: 1, x: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.3, delay: index * 0.06 }}
+    whileHover={{ x: 3 }}
+    className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/[0.04] transition-colors duration-200"
+  >
+    <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.05] group-hover:bg-white/10 transition-colors duration-200">
+      <skill.icon className="w-3.5 h-3.5 text-white/50 group-hover:text-white/80 transition-colors duration-200" />
+    </div>
 
-          {/* Subtle glow effect */}
-          <motion.div
-            className="absolute inset-0 rounded-full bg-white/5 blur-md"
-            initial={{ opacity: 0 }}
-            whileHover={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-
-        {/* Skill name with hand-drawn underline */}
-        <div className="text-sm font-medium text-white/90 group-hover:text-white text-center relative transition-colors duration-500 ease-in-out">
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs font-medium text-white/55 group-hover:text-white/85 transition-colors duration-200 truncate">
           {skill.name}
-          <HandDrawnUnderline isActive={true} />
-        </div>
-
-        {/* Level indicator - appears on hover */}
-        <motion.div
-          className="absolute -bottom-2 left-0 right-0 h-1 bg-white/10 rounded-full overflow-hidden"
-          initial={{ scaleX: 0 }}
-          whileHover={{ scaleX: 1 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
-        >
-          <div
-            className="h-full bg-gradient-to-r from-white/40 via-white/60 to-white/40"
-            style={{ width: `${skill.level}%` }}
-          />
-        </motion.div>
-
-        {/* Subtle corner accents */}
-        <div className="absolute top-2 left-2 w-2 h-2 border-t border-l border-white/20 group-hover:border-white/40 transition-all duration-500" />
-        <div className="absolute top-2 right-2 w-2 h-2 border-t border-r border-white/20 group-hover:border-white/40 transition-all duration-500" />
-        <div className="absolute bottom-2 left-2 w-2 h-2 border-b border-l border-white/20 group-hover:border-white/40 transition-all duration-500" />
-        <div className="absolute bottom-2 right-2 w-2 h-2 border-b border-r border-white/20 group-hover:border-white/40 transition-all duration-500" />
-      </motion.div>
-    );
-  };
-
-  return (
-    <div className="relative py-16 bg-black overflow-hidden">
-      {/* Subtle background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/95 to-black" />
-
-      {/* Animated grid lines in background */}
-      <div className="absolute inset-0 opacity-5">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute h-px w-full bg-white/30"
-            style={{ top: `${i * 10}%` }}
-          />
-        ))}
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-px h-full bg-white/30"
-            style={{ left: `${i * 10}%` }}
-          />
-        ))}
+        </span>
+        <span className="text-[10px] font-mono text-white/20 group-hover:text-white/35 transition-colors duration-200 ml-2 flex-shrink-0">
+          {skill.level}%
+        </span>
       </div>
-
-      <div className="relative z-20 container mx-auto px-4">
-        {/* Section Header */}
+      <div className="h-[2px] rounded-full bg-white/[0.06] overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          className="h-full rounded-full bg-gradient-to-r from-white/25 to-white/55"
+          initial={{ width: 0 }}
+          whileInView={{ width: `${skill.level}%` }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          {/* Decorative terminal icon */}
-          <motion.div
-            animate={{ y: [0, -5, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="inline-block mb-4"
-          >
-            <Terminal className="w-8 h-8 text-white/80" />
-          </motion.div>
-
-          {/* Title with sparkle accents */}
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <Sparkles className="w-5 h-5 text-white/60" />
-            <h2 className="text-4xl font-bold text-white tracking-tight">
-              TECH STACK
-            </h2>
-            <Sparkles className="w-5 h-5 text-white/60" />
-          </div>
-
-          {/* Subtitle with hand-drawn underline */}
-          <div className="relative inline-block">
-            <p className="text-white/60 text-lg">
-              Technologies I work with daily
-            </p>
-            <motion.div
-              className="absolute -bottom-2 left-0 right-0 h-px"
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, delay: 0.5 }}
-            >
-              <svg width="100%" height="2" className="overflow-visible">
-                <path
-                  d="M0,1 Q30,0 60,1 T100,1"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="1"
-                  strokeOpacity="0.4"
-                  strokeLinecap="round"
-                  strokeDasharray="4,3"
-                />
-              </svg>
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* Top Marquee - Continuous right to left */}
-        <div className="mb-8 relative">
-          {/* Marquee container with fade edges */}
-          <div className="relative overflow-hidden">
-            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-black to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-black to-transparent z-10" />
-
-            <motion.div
-              animate={{ x: ["0%", "-33.33%"] }}
-              transition={{
-                duration: 30,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-              className="flex py-4"
-            >
-              {extendedSkills.map((skill, index) => (
-                <SkillBadge key={`top-${index}`} skill={skill} index={index} />
-              ))}
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Bottom Marquee - Continuous left to right */}
-        <div className="relative">
-          {/* Marquee container with fade edges */}
-          <div className="relative overflow-hidden">
-            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-black to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-black to-transparent z-10" />
-
-            <motion.div
-              animate={{ x: ["-33.33%", "0%"] }}
-              transition={{
-                duration: 30,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-              className="flex py-4"
-            >
-              {extendedSkills.map((skill, index) => (
-                <SkillBadge
-                  key={`bottom-${index}`}
-                  skill={skill}
-                  index={index}
-                />
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Decorative terminal line at bottom */}
-          <div className="mt-8 pt-8 border-t border-white/10">
-            <div className="flex items-center justify-center gap-2 text-white/40 text-sm">
-              <Zap className="w-4 h-4 animate-pulse" />
-              <span className="font-mono">
-                Always learning new technologies
-              </span>
-              <Zap className="w-4 h-4 animate-pulse" />
-            </div>
-          </div>
-        </div>
-
-        {/* Minimalist stats */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-16"
-        >
-          <div className="grid grid-cols-3 gap-6 max-w-md mx-auto">
-            {[
-              { value: skills.length, label: "TECHNOLOGIES" },
-              { value: "∞", label: "CONTINUOUS LEARNING" },
-              { value: "100%", label: "DEDICATION" },
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                whileHover={{ scale: 1.05 }}
-                className="text-center"
-              >
-                <div className="text-2xl font-bold text-white mb-1">
-                  {stat.value}
-                </div>
-                <div className="text-xs text-white/50 tracking-wider">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+          transition={{ duration: 0.9, ease: "easeOut", delay: index * 0.06 + 0.2 }}
+        />
       </div>
     </div>
-  );
-};
+  </motion.div>
+));
+
+const CategoryBlock = memo(({ category, index }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 16 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.45, delay: index * 0.08 }}
+    className="rounded-2xl border border-white/8 bg-white/[0.02] overflow-hidden"
+  >
+    {/* Category header */}
+    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+      <span className="font-mono text-[10px] text-white/20">{category.code}</span>
+      <span className="text-[11px] font-semibold tracking-widest uppercase text-white/45">
+        {category.label}
+      </span>
+      <div className="flex-1 h-px bg-white/[0.06]" />
+      <span className="font-mono text-[10px] text-white/15">
+        {category.skills.length} skills
+      </span>
+    </div>
+
+    {/* Skills */}
+    <div className="p-2">
+      {category.skills.map((skill, i) => (
+        <SkillRow key={skill.name} skill={skill} index={i} />
+      ))}
+    </div>
+  </motion.div>
+));
+
+const SkillsSection = () => (
+  <div className="relative py-20 bg-black overflow-hidden">
+    {/* Dot grid */}
+    <div
+      className="absolute inset-0 opacity-[0.025]"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle, white 1px, transparent 1px)",
+        backgroundSize: "28px 28px",
+      }}
+    />
+
+    <div className="relative z-10 container mx-auto px-4 max-w-5xl">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.55 }}
+        className="text-center mb-12"
+      >
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.03] mb-5">
+          <Terminal className="w-3.5 h-3.5 text-white/40" />
+          <span className="text-[11px] font-mono text-white/40 tracking-[0.15em] uppercase">
+            tech stack
+          </span>
+        </div>
+
+        <h2 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3">
+          Tools I Work With
+        </h2>
+
+        <p className="text-sm text-white/35 font-mono">
+          <span className="text-white/15">{"// "}</span>
+          technologies used in daily development
+        </p>
+      </motion.div>
+
+      {/* Marquee strip */}
+      <div className="relative overflow-hidden mb-10">
+        <div className="absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none" />
+        <motion.div
+          animate={{ x: ["0%", "-33.33%"] }}
+          transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+          className="flex py-1"
+        >
+          {MARQUEE_SKILLS.map((skill, i) => (
+            <MarqueeChip key={i} skill={skill} />
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Divider */}
+      <div className="relative mb-10">
+        <div className="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
+      </div>
+
+      {/* Category grid */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {CATEGORIES.map((cat, i) => (
+          <CategoryBlock key={cat.id} category={cat} index={i} />
+        ))}
+      </div>
+
+      {/* Stats */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="mt-12 pt-8 border-t border-white/[0.07]"
+      >
+        <div className="flex items-center justify-center gap-10 sm:gap-20">
+          {[
+            { value: ALL_SKILLS.length.toString(), label: "Technologies" },
+            { value: "∞", label: "Always Learning" },
+            { value: "100%", label: "Dedication" },
+          ].map((stat, i) => (
+            <div key={i} className="text-center">
+              <div className="text-2xl font-bold text-white mb-1">
+                {stat.value}
+              </div>
+              <div className="text-[10px] font-mono text-white/25 tracking-widest uppercase">
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-center gap-2 mt-6 text-white/20 text-xs font-mono">
+          <Zap className="w-3 h-3 animate-pulse" />
+          <span>always learning new technologies</span>
+          <Zap className="w-3 h-3 animate-pulse" />
+        </div>
+      </motion.div>
+    </div>
+  </div>
+);
 
 export default SkillsSection;

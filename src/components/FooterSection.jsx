@@ -1,594 +1,240 @@
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
-  Heart,
-  Coffee,
-  Terminal,
-  Github,
-  Linkedin,
-  Twitter,
-  Instagram,
-  Mail,
-  ArrowUp,
-  Sparkles,
-  User,
-  Calendar,
-  MessageSquare,
+  Github, Linkedin, Twitter, Instagram,
+  Mail, ArrowUp, ArrowRight, Terminal,
+  Heart, Calendar,
 } from "lucide-react";
 import { useApi } from "../hooks/useApi";
 import logo from "../assets/logo-bg.png";
 
+const SOCIAL = [
+  { label: "GitHub",    icon: Github,    url: "https://github.com/mahim-shariar"                   },
+  { label: "LinkedIn",  icon: Linkedin,  url: "https://www.linkedin.com/in/md-mahim-7957381a7/"    },
+  { label: "X",         icon: Twitter,   url: "https://x.com/Being_MsMahim"                        },
+  { label: "Instagram", icon: Instagram, url: "https://www.instagram.com/being_mahimtalukder/"     },
+];
+
+const NAV = [
+  { label: "Home",         id: "home"         },
+  { label: "About",        id: "about"        },
+  { label: "Projects",     id: "projects"     },
+  { label: "Services",     id: "services"     },
+  { label: "Testimonials", id: "testimonials" },
+  { label: "Contact",      id: "contact"      },
+];
+
+const scrollTo = (id) => {
+  const el = document.getElementById(id);
+  if (el) {
+    const top = el.getBoundingClientRect().top + window.pageYOffset - 80;
+    window.scrollTo({ top, behavior: "smooth" });
+  }
+};
+
 const FooterSection = () => {
-  const [isHovered, setIsHovered] = useState({});
-  const [isInView, setIsInView] = useState(false);
-  const [currentYear, setCurrentYear] = useState(2024);
-  const [showBackToTop, setShowBackToTop] = useState(false);
-  const [contentData, setContentData] = useState(null);
   const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { amount: 0.1, once: true });
+  const [showTop, setShowTop] = useState(false);
+  const [contentData, setContentData] = useState(null);
+  const year = new Date().getFullYear();
 
   const { get: getContent } = useApi();
 
   useEffect(() => {
-    const fetchContentData = async () => {
-      try {
-        const result = await getContent("/content");
-        const data = result?.data || {};
-        setContentData(data);
-      } catch (error) {
-        console.error("Error fetching content data:", error);
-      }
-    };
-
-    fetchContentData();
+    getContent("/content")
+      .then((r) => setContentData(r?.data || null))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
-    setCurrentYear(new Date().getFullYear());
+    const fn = () => setShowTop(window.scrollY > 500);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      {
-        threshold: 0.1,
-        rootMargin: "0px 0px -100px 0px",
-      }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 500);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
-  const socialLinks = [
-    {
-      platform: "GitHub",
-      icon: Github,
-      url: contentData?.social?.github || "https://github.com",
-      color: "hover:text-white",
-    },
-    {
-      platform: "LinkedIn",
-      icon: Linkedin,
-      url: contentData?.social?.linkedin || "https://linkedin.com",
-      color: "hover:text-blue-400",
-    },
-    {
-      platform: "Twitter",
-      icon: Twitter,
-      url: contentData?.social?.twitter || "https://twitter.com",
-      color: "hover:text-blue-300",
-    },
-    {
-      platform: "Instagram",
-      icon: Instagram,
-      url: contentData?.social?.instagram || "https://instagram.com",
-      color: "hover:text-pink-400",
-    },
-  ];
-
-  const navLinks = [
-    { name: "Home", icon: Sparkles, href: "#home" },
-    { name: "About", icon: User, href: "#about" },
-    { name: "Testimonials", icon: MessageSquare, href: "#testimonials" },
-    { name: "Contact", icon: Mail, href: "#contact" },
-  ];
-
-  const quickLinks = [
-    { name: "Privacy", href: "/privacy" },
-    { name: "Terms", href: "/terms" },
-    { name: "Cookies", href: "/cookies" },
-  ];
-
-  const HandDrawnBorder = ({ isActive, color = "white", className = "" }) => (
-    <div
-      className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}
-    >
-      <svg
-        className="absolute top-0 left-0 w-full h-1 transition-all duration-700 ease-in-out"
-        viewBox="0 0 100 1"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0,0.5 Q10,0.2 20,0.5 T40,0.3 T60,0.6 T80,0.4 T100,0.5"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
-      <svg
-        className="absolute top-0 right-0 w-1 h-full transition-all duration-700 ease-in-out"
-        viewBox="0 0 1 100"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0.5,0 Q0.8,10 0.5,20 T0.7,40 T0.4,60 T0.6,80 T0.5,100"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
-      <svg
-        className="absolute bottom-0 left-0 w-full h-1 transition-all duration-700 ease-in-out"
-        viewBox="0 0 100 1"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0,0.5 Q15,0.7 30,0.4 T50,0.6 T70,0.3 T90,0.7 T100,0.5"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
-      <svg
-        className="absolute top-0 left-0 w-1 h-full transition-all duration-700 ease-in-out"
-        viewBox="0 0 1 100"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0.5,0 Q0.3,15 0.5,30 T0.3,50 T0.6,70 T0.4,90 T0.5,100"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
-    </div>
-  );
-
-  const FloatingParticles = () => (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
-      {[...Array(10)].map((_, i) => {
-        const size = Math.random() * 2 + 1;
-        const duration = Math.random() * 8 + 4;
-        const delay = Math.random() * 2;
-
-        return (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-white/10"
-            style={{
-              width: size,
-              height: size,
-              left: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: ["-100px", "100vh"],
-              opacity: [0, 0.15, 0],
-              x: [0, (Math.random() - 0.5) * 10, 0],
-            }}
-            transition={{
-              duration,
-              repeat: Infinity,
-              delay,
-              ease: "linear",
-            }}
-          />
-        );
-      })}
-    </div>
-  );
+  const fadeUp = (delay = 0) => ({
+    initial: { opacity: 0, y: 20 },
+    animate: isInView ? { opacity: 1, y: 0 } : {},
+    transition: { duration: 0.5, delay, ease: "easeOut" },
+  });
 
   return (
-    <footer
-      ref={sectionRef}
-      className="relative bg-black overflow-hidden py-12"
-    >
-      <FloatingParticles />
+    <>
+      <footer ref={sectionRef} className="relative bg-black overflow-hidden">
+        {/* Dot grid */}
+        <div
+          className="absolute inset-0 opacity-[0.025] pointer-events-none"
+          style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "28px 28px" }}
+        />
 
-      <div className="relative z-10">
-        {/* Top Border */}
+        {/* Top separator */}
         <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-        {/* Footer Header - Smaller */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="py-8"
-        >
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={isInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 text-center group hover:bg-black/60 transition-all duration-500 mb-8"
-              onMouseEnter={() =>
-                setIsHovered((prev) => ({ ...prev, header: true }))
-              }
-              onMouseLeave={() =>
-                setIsHovered((prev) => ({ ...prev, header: false }))
-              }
-            >
-              <HandDrawnBorder isActive={isHovered.header} />
+        <div className="relative z-10 container mx-auto px-4 max-w-6xl">
 
-              {/* Terminal Dots - Smaller */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={isInView ? { opacity: 1 } : {}}
-                transition={{ delay: 0.5 }}
-                className="flex gap-1 mb-4 justify-center"
-              >
-                <motion.div
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: 0 }}
-                  className="w-1.5 h-1.5 rounded-full bg-white/40"
-                />
-                <motion.div
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: 0.1 }}
-                  className="w-1.5 h-1.5 rounded-full bg-white/60"
-                />
-                <motion.div
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
-                  className="w-1.5 h-1.5 rounded-full bg-white/80"
-                />
-              </motion.div>
-
-              <motion.h2
-                initial={{ opacity: 0, y: 15 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight"
-              >
-                LET'S CONNECT
-              </motion.h2>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={isInView ? { opacity: 1 } : {}}
-                transition={{ delay: 0.7 }}
-                className="flex items-center justify-center gap-2 mt-4"
-              >
-                <Terminal className="w-4 h-4 text-white/60" />
-                <span className="text-white/40 font-mono text-xs">
-                  $ connect --ready
-                </span>
-              </motion.div>
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* Main Footer Grid - All in one row */}
-        <div className="container mx-auto px-4 pb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Logo Card - Smaller */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.8 }}
-              className="relative"
-            >
-              <div
-                className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-4 group hover:bg-black/60 transition-all duration-400 h-full"
-                onMouseEnter={() =>
-                  setIsHovered((prev) => ({ ...prev, brand: true }))
-                }
-                onMouseLeave={() =>
-                  setIsHovered((prev) => ({ ...prev, brand: false }))
-                }
-              >
-                <HandDrawnBorder isActive={isHovered.brand} />
-
-                {/* Smaller Logo */}
-                <div className="flex items-center justify-center mb-3">
-                  <img
-                    src={logo}
-                    alt="Logo"
-                    className="w-24 h-24 object-contain"
-                  />
-                </div>
-
-                <p className="text-white/60 text-xs mb-4 text-center">
-                  {contentData?.title || "Digital craftsmanship at its finest"}
-                </p>
-
-                {/* Social Links - Smaller */}
-                <div className="flex gap-2 justify-center">
-                  {socialLinks.map((social, index) => {
-                    const Icon = social.icon;
-                    return (
-                      <motion.a
-                        key={index}
-                        href={social.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        whileHover={{ scale: 1.1, y: -1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white ${social.color} hover:bg-white/10 transition-all duration-300`}
-                        title={social.platform}
-                      >
-                        <Icon className="w-3.5 h-3.5" />
-                      </motion.a>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Navigation Card - Smaller */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.9 }}
-              className="relative"
-            >
-              <div
-                className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-4 group hover:bg-black/60 transition-all duration-400 h-full"
-                onMouseEnter={() =>
-                  setIsHovered((prev) => ({ ...prev, nav: true }))
-                }
-                onMouseLeave={() =>
-                  setIsHovered((prev) => ({ ...prev, nav: false }))
-                }
-              >
-                <HandDrawnBorder isActive={isHovered.nav} />
-
-                <h3 className="text-white font-bold mb-3 flex items-center gap-2 text-sm">
-                  <span className="text-white/40">#</span>
-                  NAVIGATION
-                </h3>
-
-                <ul className="space-y-2">
-                  {navLinks.map((link, index) => {
-                    const Icon = link.icon;
-                    return (
-                      <motion.li
-                        key={link.name}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={isInView ? { opacity: 1, x: 0 } : {}}
-                        transition={{
-                          delay: 1 + index * 0.1,
-                        }}
-                      >
-                        <a
-                          href={link.href}
-                          className="flex items-center gap-2 text-white/60 hover:text-white transition-colors duration-300 group/link text-sm"
-                        >
-                          <div className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center group-hover/link:scale-110 transition-transform duration-300">
-                            <Icon className="w-4 h-4" />
-                          </div>
-                          <span>{link.name}</span>
-                        </a>
-                      </motion.li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </motion.div>
-
-            {/* Stats Card - Smaller */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 1 }}
-              className="relative"
-            >
-              <div
-                className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-4 group hover:bg-black/60 transition-all duration-400 h-full"
-                onMouseEnter={() =>
-                  setIsHovered((prev) => ({ ...prev, stats: true }))
-                }
-                onMouseLeave={() =>
-                  setIsHovered((prev) => ({ ...prev, stats: false }))
-                }
-              >
-                <HandDrawnBorder isActive={isHovered.stats} />
-
-                <h3 className="text-white font-bold mb-3 flex items-center gap-2 text-sm">
-                  <span className="text-white/40">$</span>
-                  STATS
-                </h3>
-
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-xl font-bold text-white mb-1">
-                      {contentData?.experienceYears || 3}+
-                    </div>
-                    <div className="text-white/40 text-xs">
-                      Years Experience
-                    </div>
-                  </div>
-
-                  <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-                  <div>
-                    <div className="text-xl font-bold text-white mb-1">
-                      {contentData?.projectCount || 20}+
-                    </div>
-                    <div className="text-white/40 text-xs">
-                      Projects Completed
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Contact Card - Smaller */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 1.1 }}
-              className="relative"
-            >
-              <div
-                className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-4 group hover:bg-black/60 transition-all duration-400 h-full"
-                onMouseEnter={() =>
-                  setIsHovered((prev) => ({ ...prev, contact: true }))
-                }
-                onMouseLeave={() =>
-                  setIsHovered((prev) => ({ ...prev, contact: false }))
-                }
-              >
-                <HandDrawnBorder isActive={isHovered.contact} />
-
-                <h3 className="text-white font-bold mb-3 flex items-center gap-2 text-sm">
-                  <span className="text-white/40">@</span>
-                  CONTACT
-                </h3>
-
-                <div className="space-y-3">
-                  <a
-                    href="mailto:mdmahim924214@gmail.com"
-                    className="flex items-center gap-2 text-white/60 hover:text-white transition-colors duration-300 text-xs"
-                  >
-                    <Mail className="w-3.5 h-3.5" />
-                    <span>
-                      Email: {contentData?.email || "mdmahim924214@gmail.com"}
+          {/* ── Large editorial wordmark ── */}
+          <motion.div {...fadeUp(0)} className="py-16 border-b border-white/[0.06]">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <img src={logo} alt="Logo" className="h-10 w-auto object-contain" />
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 bg-white/[0.03]">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/50 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white/80" />
                     </span>
-                  </a>
-
-                  <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-                  <div className="text-white/60 text-xs">
-                    <p>Available for:</p>
-                    <ul className="mt-1 space-y-1">
-                      <li className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-400/60" />
-                        <span>Freelance projects</span>
-                      </li>
-                      <li className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400/60" />
-                        <span>Full-time roles</span>
-                      </li>
-                      <li className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-purple-400/60" />
-                        <span>Consultation</span>
-                      </li>
-                    </ul>
+                    <span className="text-[10px] font-mono text-white/40 tracking-widest uppercase">Open to work</span>
                   </div>
+                </div>
+                <p className="text-white/25 text-sm font-mono max-w-xs">
+                  {contentData?.title || "Building digital experiences that matter."}
+                </p>
+              </div>
+
+              <motion.button
+                onClick={() => scrollTo("contact")}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="group self-start sm:self-auto flex items-center gap-2.5 px-5 py-2.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-white/90 transition-colors duration-200 shrink-0"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                Book a Free Call
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-200" />
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* ── Main grid ── */}
+          <div className="py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 border-b border-white/[0.06]">
+
+            {/* Brand col */}
+            <motion.div {...fadeUp(0.08)}>
+              <div className="text-[10px] font-mono text-white/20 tracking-[0.2em] uppercase mb-4">About</div>
+              <p className="text-white/35 text-[13px] leading-relaxed mb-6 max-w-xs">
+                Full-stack developer crafting performant, pixel-perfect web applications with a focus on user experience.
+              </p>
+              <div className="flex items-center gap-2">
+                {SOCIAL.map((s) => {
+                  const SIcon = s.icon;
+                  return (
+                    <motion.a
+                      key={s.label}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      whileHover={{ y: -3 }}
+                      transition={{ duration: 0.2 }}
+                      title={s.label}
+                      className="w-8 h-8 rounded-lg border border-white/8 bg-white/[0.03] flex items-center justify-center text-white/35 hover:text-white/70 hover:border-white/15 hover:bg-white/[0.06] transition-all duration-200"
+                    >
+                      <SIcon className="w-3.5 h-3.5" />
+                    </motion.a>
+                  );
+                })}
+              </div>
+            </motion.div>
+
+            {/* Navigation col */}
+            <motion.div {...fadeUp(0.14)}>
+              <div className="text-[10px] font-mono text-white/20 tracking-[0.2em] uppercase mb-4">Navigate</div>
+              <ul className="space-y-2.5">
+                {NAV.map((item, i) => (
+                  <motion.li
+                    key={item.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={isInView ? { opacity: 1, x: 0 } : {}}
+                    transition={{ duration: 0.35, delay: 0.2 + i * 0.04 }}
+                  >
+                    <button
+                      onClick={() => scrollTo(item.id)}
+                      className="group flex items-center gap-2 text-white/35 hover:text-white/70 text-[13px] transition-colors duration-200"
+                    >
+                      <span className="w-3 h-px bg-white/15 group-hover:w-5 group-hover:bg-white/40 transition-all duration-200" />
+                      {item.label}
+                    </button>
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
+
+            {/* Stats col */}
+            <motion.div {...fadeUp(0.20)}>
+              <div className="text-[10px] font-mono text-white/20 tracking-[0.2em] uppercase mb-4">Stats</div>
+              <div className="space-y-4">
+                {[
+                  { value: `${contentData?.experienceYears ?? 3}+`, label: "Years experience" },
+                  { value: `${contentData?.projectCount ?? 20}+`,   label: "Projects shipped" },
+                  { value: "100%",                                    label: "Client satisfaction" },
+                ].map((stat) => (
+                  <div key={stat.label}>
+                    <div className="text-2xl font-bold text-white/80 tracking-tight">{stat.value}</div>
+                    <div className="text-[11px] font-mono text-white/25 mt-0.5">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Contact col */}
+            <motion.div {...fadeUp(0.26)}>
+              <div className="text-[10px] font-mono text-white/20 tracking-[0.2em] uppercase mb-4">Contact</div>
+              <div className="space-y-3">
+                <a
+                  href={`mailto:${contentData?.email || "mdmahim924214@gmail.com"}`}
+                  className="group flex items-center gap-2.5 text-white/35 hover:text-white/65 text-[13px] transition-colors duration-200"
+                >
+                  <Mail className="w-3.5 h-3.5 shrink-0" />
+                  <span className="font-mono text-[11px] truncate">
+                    {contentData?.email || "mdmahim924214@gmail.com"}
+                  </span>
+                </a>
+
+                <div className="pt-2 space-y-2">
+                  {["Freelance projects", "Full-time roles", "Consultation"].map((item) => (
+                    <div key={item} className="flex items-center gap-2 text-white/30 text-[11px]">
+                      <div className="w-1 h-1 rounded-full bg-white/30 shrink-0" />
+                      {item}
+                    </div>
+                  ))}
                 </div>
               </div>
             </motion.div>
           </div>
 
-          {/* Bottom Bar - Smaller */}
-          <div className="relative">
-            <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-6" />
-
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              {/* Copyright - Smaller */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={isInView ? { opacity: 1 } : {}}
-                transition={{ delay: 1.2 }}
-                className="flex items-center gap-1.5 text-white/40 text-xs"
-              >
-                <Heart className="w-3 h-3 text-red-400" />
-                <span>
-                  © {currentYear} {contentData?.name || "YourName"}
-                </span>
-              </motion.div>
-
-              {/* Quick Links - Smaller */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={isInView ? { opacity: 1 } : {}}
-                transition={{ delay: 1.3 }}
-                className="flex flex-wrap items-center gap-4"
-              >
-                {quickLinks.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link.href}
-                    className="text-white/40 hover:text-white text-xs transition-colors duration-300"
-                  >
-                    {link.name}
-                  </a>
-                ))}
-              </motion.div>
-
-              {/* Made With - Smaller */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={isInView ? { opacity: 1 } : {}}
-                transition={{ delay: 1.4 }}
-                className="flex items-center gap-1.5 text-white/40 text-xs"
-              >
-                <Coffee className="w-3 h-3 text-yellow-400" />
-                <span>Made with passion</span>
-              </motion.div>
+          {/* ── Bottom bar ── */}
+          <motion.div {...fadeUp(0.32)} className="py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-white/20 text-[11px] font-mono">
+              <Terminal className="w-3 h-3" />
+              <span>© {year} {contentData?.name || "Mahim"}. All rights reserved.</span>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Back to Top Button - Smaller */}
+            <div className="flex items-center gap-1 text-white/15 text-[11px] font-mono">
+              <Heart className="w-3 h-3" />
+              <span>Built with passion &amp; coffee</span>
+            </div>
+          </motion.div>
+        </div>
+      </footer>
+
+      {/* Back to top */}
       <AnimatePresence>
-        {showBackToTop && (
+        {showTop && (
           <motion.button
-            initial={{ opacity: 0, scale: 0 }}
+            initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0 }}
-            onClick={scrollToTop}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="fixed bottom-4 right-4 z-40 w-10 h-10 rounded-full bg-black/80 backdrop-blur-sm border border-white/10 hover:border-white/30 hover:bg-black/90 transition-all duration-300 flex items-center justify-center"
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="fixed bottom-20 right-6 z-40 w-9 h-9 rounded-xl border border-white/10 bg-black/80 backdrop-blur-sm text-white/50 hover:text-white hover:border-white/25 hover:bg-black/90 transition-all duration-200 flex items-center justify-center shadow-xl"
+            title="Back to top"
           >
-            <ArrowUp className="w-4 h-4 text-white" />
+            <ArrowUp className="w-3.5 h-3.5" />
           </motion.button>
         )}
       </AnimatePresence>
-    </footer>
+    </>
   );
 };
 

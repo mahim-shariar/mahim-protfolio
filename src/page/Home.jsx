@@ -1,76 +1,80 @@
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense, lazy } from "react";
 import HeroSection from "../components/HeroSection";
-import SkillsSection from "../components/SkillsSection";
-import FeaturedProjects from "../components/FeaturedProjects";
-import AboutMeSection from "../components/AboutMeSection";
-import ProcessSection from "../components/ProcessSection";
-import ServicesSection from "../components/ServicesSection";
-import TestimonialsSection from "../components/TestimonialsSection";
-import ContactSection from "../components/ContactSection";
-import FooterSection from "../components/FooterSection";
+import CustomCursor from "../components/CustomCursor";
+import CommandPalette from "../components/CommandPalette";
+
+const SkillsSection = lazy(() => import("../components/SkillsSection"));
+const FeaturedProjects = lazy(() => import("../components/FeaturedProjects"));
+const AboutMeSection = lazy(() => import("../components/AboutMeSection"));
+const ProcessSection = lazy(() => import("../components/ProcessSection"));
+const ServicesSection = lazy(() => import("../components/ServicesSection"));
+const TestimonialsSection = lazy(
+  () => import("../components/TestimonialsSection"),
+);
+const ContactSection = lazy(() => import("../components/ContactSection"));
+const FooterSection = lazy(() => import("../components/FooterSection"));
+
+const SectionFallback = () => (
+  <div className="w-full py-20 flex items-center justify-center bg-black">
+    <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+  </div>
+);
 
 const Home = () => {
-  // Fix scroll position on initial load
   useEffect(() => {
-    // Force scroll to top on initial load
     window.scrollTo(0, 0);
-
-    // Prevent any body overflow during initial render
-    document.body.style.overflow = "hidden";
-
-    // Wait for everything to load, then restore overflow
-    const timer = setTimeout(() => {
-      document.body.style.overflow = "auto";
-    }, 100);
-
-    return () => {
-      clearTimeout(timer);
-      document.body.style.overflow = "auto";
-    };
   }, []);
 
   return (
     <div className="relative">
-      {/* Hero Section with id for navigation */}
+      <CustomCursor />
+      <CommandPalette />
       <section id="home" className="scroll-mt-16">
         <HeroSection />
       </section>
 
       <div className="bg-black">
-        {/* Skills Section */}
-        <section className="scroll-mt-16">
-          <SkillsSection />
-        </section>
+        <Suspense fallback={<SectionFallback />}>
+          <section className="scroll-mt-16">
+            <SkillsSection />
+          </section>
+        </Suspense>
 
-        {/* Featured Projects */}
-        <section id="projects" className="scroll-mt-16">
-          <FeaturedProjects />
-        </section>
+        <Suspense fallback={<SectionFallback />}>
+          <section id="projects" className="scroll-mt-16">
+            <FeaturedProjects />
+          </section>
+        </Suspense>
 
-        {/* About Section with id for navigation */}
-        <section id="about" className="scroll-mt-16">
-          <AboutMeSection />
-        </section>
+        <Suspense fallback={<SectionFallback />}>
+          <section id="about" className="scroll-mt-16">
+            <AboutMeSection />
+          </section>
+        </Suspense>
 
-        {/* Process Section */}
-        <section className="scroll-mt-16">
-          <ProcessSection />
-        </section>
+        <Suspense fallback={<SectionFallback />}>
+          <section className="scroll-mt-16">
+            <ProcessSection />
+          </section>
+        </Suspense>
 
-        {/* Services Section with id for navigation */}
-        <section id="services" className="scroll-mt-16">
-          <ServicesSection />
-        </section>
+        <Suspense fallback={<SectionFallback />}>
+          <section id="services" className="scroll-mt-16">
+            <ServicesSection />
+          </section>
+        </Suspense>
 
-        {/* Testimonials Section with id for navigation */}
-        <section id="testimonials" className="scroll-mt-16">
-          <TestimonialsSection />
-        </section>
+        <Suspense fallback={<SectionFallback />}>
+          <section id="testimonials" className="scroll-mt-16">
+            <TestimonialsSection />
+          </section>
+        </Suspense>
 
-        {/* Contact Section with id for navigation */}
-        <section id="contact" className="scroll-mt-16">
-          <ContactSection />
-        </section>
+        <Suspense fallback={<SectionFallback />}>
+          <section id="contact" className="scroll-mt-16">
+            <ContactSection />
+          </section>
+        </Suspense>
       </div>
     </div>
   );

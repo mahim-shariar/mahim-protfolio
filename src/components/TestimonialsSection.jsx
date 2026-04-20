@@ -1,561 +1,185 @@
-import { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Quote,
-  Star,
-  User,
-  Building,
-  Sparkles,
-  Terminal,
-  MessageSquare,
-} from "lucide-react";
+import { useState, useEffect, useRef, memo } from "react";
+import { motion, useInView } from "framer-motion";
+import { Quote, Star, Sparkles } from "lucide-react";
 import { useApi } from "../hooks/useApi";
 
-const TestimonialsSection = () => {
-  const [isHovered, setIsHovered] = useState({});
-  const [isInView, setIsInView] = useState(false);
-  const sectionRef = useRef(null);
-  const api = useApi();
+const FALLBACK_REVIEWS = [
+  { _id: "1", clientName: "Alex Chen",         company: "CTO at TechForward Inc.",    quote: "Absolutely transformative work! The attention to detail and technical excellence delivered results that exceeded all our expectations.", stars: 5 },
+  { _id: "2", clientName: "Sarah Johnson",     company: "Product Manager at DesignHub", quote: "Working together was a game-changer for our platform. The intuitive UI/UX designs improved user engagement by 45%.", stars: 5 },
+  { _id: "3", clientName: "Michael Rodriguez", company: "CEO at StartupScale",         quote: "The technical architecture implemented for our scaling needs was brilliant. We've grown 3x without any performance issues.", stars: 5 },
+  { _id: "4", clientName: "Emma Williams",     company: "Lead Developer at CloudNine", quote: "The code quality and documentation were impeccable. Easy to maintain and extend. Our team learned so much from this collaboration.", stars: 5 },
+  { _id: "5", clientName: "David Kim",         company: "Head of Marketing at BrandSync", quote: "The responsive redesign boosted our mobile conversion rate by 60%. The animations created a truly engaging experience.", stars: 5 },
+  { _id: "6", clientName: "Lisa Wang",         company: "Operations Director at GlobalTech", quote: "Outstanding strategic guidance during our digital transformation. The technical roadmaps empowered our whole engineering team.", stars: 5 },
+];
 
-  const [reviews, setReviews] = useState([]);
+const getInitials = (name) =>
+  name?.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "??";
 
-  // Fetch reviews data from API
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const response = await api.get("/reviews");
-        setReviews(response.data || []);
-      } catch (error) {
-        console.error("Error fetching reviews:", error);
-        // Fallback to default testimonials if API fails
-        setReviews([
-          {
-            _id: "1",
-            clientName: "Alex Chen",
-            company: "CTO at TechForward Inc.",
-            quote:
-              "Absolutely transformative work! The attention to detail and technical excellence delivered results that exceeded all our expectations.",
-            stars: 5,
-          },
-          {
-            _id: "2",
-            clientName: "Sarah Johnson",
-            company: "Product Manager at DesignHub",
-            quote:
-              "Working together was a game-changer for our platform. The intuitive UI/UX designs improved user engagement by 45%.",
-            stars: 5,
-          },
-          {
-            _id: "3",
-            clientName: "Michael Rodriguez",
-            company: "CEO at StartupScale",
-            quote:
-              "The technical architecture implemented for our scaling needs was brilliant. We've grown 3x without any performance issues.",
-            stars: 5,
-          },
-          {
-            _id: "4",
-            clientName: "Emma Williams",
-            company: "Lead Developer at CloudNine",
-            quote:
-              "The code quality and documentation were impeccable. Easy to maintain and extend. Our team learned so much.",
-            stars: 5,
-          },
-          {
-            _id: "5",
-            clientName: "David Kim",
-            company: "Head of Marketing at BrandSync",
-            quote:
-              "The responsive redesign boosted our mobile conversion rate by 60%. The animations created an engaging experience.",
-            stars: 5,
-          },
-          {
-            _id: "6",
-            clientName: "Lisa Wang",
-            company: "Operations Director at GlobalTech",
-            quote:
-              "Outstanding strategic guidance during our digital transformation. The technical roadmaps empowered our engineers.",
-            stars: 5,
-          },
-        ]);
-      }
-    };
-
-    fetchReviews();
-  }, []);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      {
-        threshold: 0.1,
-        rootMargin: "0px 0px -100px 0px",
-      }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
-  }, []);
-
-  const HandDrawnBorder = ({ isActive, color = "white", className = "" }) => (
-    <div
-      className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}
-    >
-      <svg
-        className="absolute top-0 left-0 w-full h-1 transition-all duration-700 ease-in-out"
-        viewBox="0 0 100 1"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0,0.5 Q10,0.2 20,0.5 T40,0.3 T60,0.6 T80,0.4 T100,0.5"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
-      <svg
-        className="absolute top-0 right-0 w-1 h-full transition-all duration-700 ease-in-out"
-        viewBox="0 0 1 100"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0.5,0 Q0.8,10 0.5,20 T0.7,40 T0.4,60 T0.6,80 T0.5,100"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
-      <svg
-        className="absolute bottom-0 left-0 w-full h-1 transition-all duration-700 ease-in-out"
-        viewBox="0 0 100 1"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0,0.5 Q15,0.7 30,0.4 T50,0.6 T70,0.3 T90,0.7 T100,0.5"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
-      <svg
-        className="absolute top-0 left-0 w-1 h-full transition-all duration-700 ease-in-out"
-        viewBox="0 0 1 100"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0.5,0 Q0.3,15 0.5,30 T0.3,50 T0.6,70 T0.4,90 T0.5,100"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeOpacity={isActive ? 0.8 : 0.3}
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-in-out"
-        />
-      </svg>
+/* ─── Card ─── */
+const TestimonialCard = memo(({ review }) => (
+  <motion.div
+    whileHover={{ y: -4, scale: 1.02 }}
+    transition={{ duration: 0.25, ease: "easeOut" }}
+    className="shrink-0 w-[300px] mx-2.5 p-5 rounded-2xl bg-white/[0.025] border border-white/[0.07] hover:border-white/18 hover:bg-white/[0.045] transition-colors duration-300 group cursor-default"
+  >
+    {/* Stars + quote icon */}
+    <div className="flex items-start justify-between mb-3.5">
+      <div className="flex gap-0.5">
+        {Array.from({ length: review.stars || 5 }).map((_, i) => (
+          <Star key={i} className="w-3 h-3 fill-white/70 text-white/70 group-hover:fill-white group-hover:text-white transition-colors duration-300" />
+        ))}
+      </div>
+      <Quote className="w-4 h-4 text-white/10 group-hover:text-white/20 transition-colors duration-300" />
     </div>
-  );
 
-  const FloatingParticles = () => (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
-      {[...Array(15)].map((_, i) => {
-        const size = Math.random() * 3 + 1;
-        const duration = Math.random() * 10 + 5;
-        const delay = Math.random() * 2;
+    {/* Quote */}
+    <p className="text-white/50 text-[13px] leading-relaxed mb-4 line-clamp-3 group-hover:text-white/70 transition-colors duration-300">
+      "{review.quote}"
+    </p>
 
-        return (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-white/10"
-            style={{
-              width: size,
-              height: size,
-              left: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: ["-100px", "100vh"],
-              opacity: [0, 0.2, 0],
-              x: [0, (Math.random() - 0.5) * 15, 0],
-            }}
-            transition={{
-              duration,
-              repeat: Infinity,
-              delay,
-              ease: "linear",
-            }}
-          />
-        );
-      })}
-    </div>
-  );
-
-  const StarRating = ({ rating }) => (
-    <div className="flex gap-1">
-      {[...Array(5)].map((_, i) => (
-        <Star
-          key={i}
-          className={`w-3 h-3 ${
-            i < (rating || 5) ? "fill-white text-white" : "text-white/20"
-          }`}
+    {/* Author */}
+    <div className="flex items-center gap-3 pt-3.5 border-t border-white/[0.06]">
+      {/* Avatar ring */}
+      <div className="relative shrink-0">
+        <div className="w-9 h-9 rounded-full bg-white/6 border border-white/10 flex items-center justify-center">
+          <span className="text-white/55 text-[10px] font-bold font-mono">
+            {getInitials(review.clientName)}
+          </span>
+        </div>
+        <motion.div
+          className="absolute -inset-1 rounded-full border border-white/8"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+          style={{ borderStyle: "dashed" }}
         />
-      ))}
+      </div>
+      <div className="min-w-0">
+        <div className="text-white/75 text-xs font-semibold truncate group-hover:text-white transition-colors duration-300">
+          {review.clientName}
+        </div>
+        <div className="text-white/30 text-[10px] truncate font-mono">{review.company}</div>
+      </div>
     </div>
-  );
+  </motion.div>
+));
 
-  // For marquee effect, we need to duplicate the reviews array
-  const topMarqueeReviews = reviews.length > 0 ? [...reviews, ...reviews] : [];
-  const bottomMarqueeReviews =
-    reviews.length > 0
-      ? [...reviews.slice().reverse(), ...reviews.slice().reverse()]
-      : [];
+/* ─── Marquee row ─── */
+const MarqueeRow = ({ items, direction = 1, speed = 45 }) => {
+  const [paused, setPaused] = useState(false);
+  const triple = [...items, ...items, ...items];
 
   return (
     <div
-      ref={sectionRef}
-      className="relative min-h-screen bg-black overflow-hidden py-20"
+      className="relative overflow-hidden"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
     >
-      <FloatingParticles />
+      {/* Edge fades */}
+      <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none" />
 
       <motion.div
-        initial={{ opacity: 0, y: 60 }}
-        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        animate={{ x: direction > 0 ? ["0%", "-33.33%"] : ["-33.33%", "0%"] }}
         transition={{
-          duration: 1.5,
-          ease: [0.22, 1, 0.36, 1],
+          duration: speed,
+          repeat: Infinity,
+          ease: "linear",
         }}
-        className="relative z-10 container mx-auto px-4"
+        style={{ animationPlayState: paused ? "paused" : "running" }}
+        className="flex py-2"
       >
+        {triple.map((review, i) => (
+          <TestimonialCard key={`${review._id}-${i}`} review={review} />
+        ))}
+      </motion.div>
+    </div>
+  );
+};
+
+/* ─── Main ─── */
+const TestimonialsSection = () => {
+  const [reviews, setReviews] = useState(FALLBACK_REVIEWS);
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { amount: 0.1, once: true });
+  const { get: getReviews } = useApi();
+
+  useEffect(() => {
+    getReviews("/reviews").then((res) => {
+      if (res?.data?.length) setReviews(res.data);
+    }).catch(() => {});
+  }, [getReviews]);
+
+  const reversed = [...reviews].reverse();
+
+  return (
+    <div ref={sectionRef} className="relative py-24 bg-black overflow-hidden">
+      {/* Dot grid */}
+      <div
+        className="absolute inset-0 opacity-[0.025] pointer-events-none"
+        style={{
+          backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+
+      {/* ── Header ── */}
+      <div className="relative z-10 container mx-auto px-4 max-w-6xl mb-14">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, delay: 0.2 }}
-          className="text-center mb-20"
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 inline-block group hover:bg-black/60 transition-all duration-700"
-            onMouseEnter={() =>
-              setIsHovered((prev) => ({ ...prev, header: true }))
-            }
-            onMouseLeave={() =>
-              setIsHovered((prev) => ({ ...prev, header: false }))
-            }
-          >
-            <HandDrawnBorder isActive={isHovered.header} />
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={isInView ? { opacity: 1 } : {}}
-              transition={{ delay: 0.6 }}
-              className="flex gap-1.5 mb-6 justify-center"
-            >
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 3, repeat: Infinity, delay: 0 }}
-                className="w-2 h-2 rounded-full bg-white/40"
-              />
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 3, repeat: Infinity, delay: 0.2 }}
-                className="w-2 h-2 rounded-full bg-white/60"
-              />
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 3, repeat: Infinity, delay: 0.4 }}
-                className="w-2 h-2 rounded-full bg-white/80"
-              />
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight"
-            >
-              TESTIMONIALS
-            </motion.h1>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={isInView ? { opacity: 1 } : {}}
-              transition={{ delay: 0.7 }}
-              className="flex items-center justify-center gap-3 mt-6"
-            >
-              <MessageSquare className="w-5 h-5 text-white/60" />
-              <span className="text-white/40 font-mono text-sm">
-                $ testimonials --trust --proof
-              </span>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-
-        {/* Top Marquee - Left to Right */}
-        <div className="space-y-12">
-          <div className="relative overflow-hidden">
-            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none" />
-
-            <div className="flex animate-marquee-left hover:animation-paused">
-              {topMarqueeReviews.map((review, index) => (
-                <motion.div
-                  key={`top-${review._id || index}-${index}`}
-                  className="flex-shrink-0 w-80 mx-4"
-                  whileHover={{ y: -5 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div
-                    className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-6 h-full group hover:bg-black/60 hover:border-white/30 transition-all duration-500"
-                    onMouseEnter={() =>
-                      setIsHovered((prev) => ({
-                        ...prev,
-                        [`top-${review._id || index}`]: true,
-                      }))
-                    }
-                    onMouseLeave={() =>
-                      setIsHovered((prev) => ({
-                        ...prev,
-                        [`top-${review._id || index}`]: false,
-                      }))
-                    }
-                  >
-                    <HandDrawnBorder
-                      isActive={isHovered[`top-${review._id || index}`]}
-                    />
-
-                    {/* QUOTE ICON */}
-                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-                      <Quote className="w-4 h-4 text-white/80" />
-                    </div>
-
-                    {/* Stars */}
-                    <div className="mb-4 flex">
-                      <StarRating rating={review.stars} />
-                    </div>
-
-                    {/* Quote Text */}
-                    <p className="text-white/70 text-sm italic mb-6 leading-relaxed line-clamp-3">
-                      "{review.quote}"
-                    </p>
-
-                    {/* Client Info */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                        <User className="w-4 h-4 text-white/80" />
-                      </div>
-                      <div>
-                        <h4 className="text-white font-medium text-sm">
-                          {review.clientName}
-                        </h4>
-                        <p className="text-white/40 text-xs">
-                          {review.company}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Bottom Marquee - Right to Left */}
-          <div className="relative overflow-hidden">
-            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none" />
-
-            <div className="flex animate-marquee-right hover:animation-paused">
-              {bottomMarqueeReviews.map((review, index) => (
-                <motion.div
-                  key={`bottom-${review._id || index}-${index}`}
-                  className="flex-shrink-0 w-80 mx-4"
-                  whileHover={{ y: -5 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div
-                    className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-6 h-full group hover:bg-black/60 hover:border-white/30 transition-all duration-500"
-                    onMouseEnter={() =>
-                      setIsHovered((prev) => ({
-                        ...prev,
-                        [`bottom-${review._id || index}`]: true,
-                      }))
-                    }
-                    onMouseLeave={() =>
-                      setIsHovered((prev) => ({
-                        ...prev,
-                        [`bottom-${review._id || index}`]: false,
-                      }))
-                    }
-                  >
-                    <HandDrawnBorder
-                      isActive={isHovered[`bottom-${review._id || index}`]}
-                    />
-
-                    {/* HEADER */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Building className="w-4 h-4 text-white/40" />
-                        <span className="text-white/40 text-xs">
-                          Verified Client
-                        </span>
-                      </div>
-                      <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-                        <Quote className="w-4 h-4 text-white/80" />
-                      </div>
-                    </div>
-
-                    {/* Quote Text */}
-                    <p className="text-white/70 text-sm mb-6 leading-relaxed line-clamp-3">
-                      "{review.quote}"
-                    </p>
-
-                    {/* Client Info */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center">
-                          <span className="text-white/80 text-xs font-mono">
-                            {review.clientName
-                              ?.split(" ")
-                              .map((n) => n[0])
-                              .join("") || "CN"}
-                          </span>
-                        </div>
-                        <div>
-                          <h4 className="text-white font-medium text-sm">
-                            {review.clientName}
-                          </h4>
-                          <div className="flex items-center gap-1">
-                            <Star className="w-3 h-3 fill-white text-white" />
-                            <span className="text-white/40 text-xs">
-                              {review.stars || 5}.0
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="relative my-20">
-          <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <div className="w-3 h-3 rotate-45 bg-white/10 border border-white/20" />
-          </div>
-        </div>
-
-        {/* Summary Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 1 }}
+          transition={{ duration: 0.55 }}
           className="text-center"
         >
-          <div
-            className="relative bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 group hover:bg-black/60 transition-all duration-700"
-            onMouseEnter={() =>
-              setIsHovered((prev) => ({ ...prev, summary: true }))
-            }
-            onMouseLeave={() =>
-              setIsHovered((prev) => ({ ...prev, summary: false }))
-            }
-          >
-            <HandDrawnBorder isActive={isHovered.summary} />
-
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <Sparkles className="w-8 h-8 text-white" />
-              </div>
-
-              <h3 className="text-2xl font-bold text-white mb-4">
-                Proven Track Record
-              </h3>
-
-              <p className="text-white/60 max-w-xl mx-auto mb-6">
-                Every testimonial represents a successful partnership built on
-                trust, quality, and exceptional results. Join the growing list
-                of satisfied clients who have transformed their digital
-                presence.
-              </p>
-
-              <div className="flex items-center gap-8">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-1">
-                    {reviews.length || 6}+
-                  </div>
-                  <div className="text-white/40 text-sm">Happy Clients</div>
-                </div>
-                <div className="h-12 w-px bg-white/10" />
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-1">100%</div>
-                  <div className="text-white/40 text-sm">Satisfaction</div>
-                </div>
-                <div className="h-12 w-px bg-white/10" />
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-1">5.0</div>
-                  <div className="text-white/40 text-sm">Average Rating</div>
-                </div>
-              </div>
-            </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.03] mb-5">
+            <Sparkles className="w-3.5 h-3.5 text-white/40" />
+            <span className="text-[11px] font-mono text-white/40 tracking-[0.15em] uppercase">testimonials</span>
           </div>
+
+          <h2 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3">
+            What Clients Say
+          </h2>
+
+          <p className="text-sm text-white/35 font-mono">
+            <span className="text-white/15">{"// "}</span>
+            real feedback from real partnerships · hover to pause
+          </p>
         </motion.div>
+      </div>
+
+      {/* ── Marquee rows ── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={isInView ? { opacity: 1 } : {}}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="space-y-4"
+      >
+        <MarqueeRow items={reviews}   direction={1}  speed={45} />
+        <MarqueeRow items={reversed}  direction={-1} speed={55} />
       </motion.div>
 
-      <style jsx>{`
-        @keyframes marquee-left {
-          0% {
-            transform: translateX(-50%);
-          }
-          100% {
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes marquee-right {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
-        .animate-marquee-left {
-          animation: marquee-left 40s linear infinite;
-        }
-
-        .animate-marquee-right {
-          animation: marquee-right 40s linear infinite;
-        }
-
-        .hover:animation-paused:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
+      {/* ── Stats ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.55, delay: 0.4 }}
+        className="relative z-10 container mx-auto px-4 max-w-6xl mt-14"
+      >
+        <div className="relative rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+          <div className="grid grid-cols-3 divide-x divide-white/[0.06] py-8">
+            {[
+              { value: `${reviews.length}+`, label: "Happy Clients"    },
+              { value: "100%",               label: "Satisfaction Rate" },
+              { value: "5.0",                label: "Average Rating"    },
+            ].map((stat) => (
+              <div key={stat.label} className="flex flex-col items-center gap-1.5 px-4">
+                <span className="text-2xl sm:text-3xl font-bold text-white">{stat.value}</span>
+                <span className="text-[10px] font-mono text-white/28 tracking-widest uppercase">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
