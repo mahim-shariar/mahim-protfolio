@@ -5,7 +5,7 @@ import React, {
   useCallback,
   memo,
 } from "react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
 import {
   Terminal,
   ExternalLink,
@@ -110,8 +110,26 @@ const dotPatternStyle = {
 const ProjectCard = memo(({ project, index, isFeatured, openModal }) => {
   const [imgErr, setImgErr] = useState(false);
   const imageUrl = getImageUrl(project);
-  const category =
-    project.category?.name || project.categoryName || "Project";
+  const category = project.category?.name || project.categoryName || "Project";
+
+  const rotX = useMotionValue(0);
+  const rotY = useMotionValue(0);
+  const glowX = useMotionValue(50);
+  const glowY = useMotionValue(50);
+  const springRotX = useSpring(rotX, { stiffness: 220, damping: 22, mass: 0.5 });
+  const springRotY = useSpring(rotY, { stiffness: 220, damping: 22, mass: 0.5 });
+  const shimmer = useMotionTemplate`radial-gradient(circle at ${glowX}% ${glowY}%, rgba(255,255,255,0.08), transparent 60%)`;
+
+  const onMove = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    rotX.set((y - 0.5) * -8);
+    rotY.set((x - 0.5) * 8);
+    glowX.set(x * 100);
+    glowY.set(y * 100);
+  };
+  const onLeave = () => { rotX.set(0); rotY.set(0); };
 
   return (
     <motion.div
@@ -119,11 +137,25 @@ const ProjectCard = memo(({ project, index, isFeatured, openModal }) => {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
+      style={{
+        transformPerspective: 1000,
+        rotateX: springRotX,
+        rotateY: springRotY,
+        transformStyle: "preserve-3d",
+      }}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
       onClick={() => openModal(project)}
       className={`relative overflow-hidden rounded-2xl cursor-pointer group ${
         isFeatured ? "sm:col-span-2 h-[420px]" : "h-[300px]"
       }`}
     >
+      {/* Holographic shimmer */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ background: shimmer }}
+      />
+
       {imageUrl && !imgErr ? (
         <img
           src={imageUrl}
@@ -522,6 +554,26 @@ const FeaturedProjects = () => {
         style={{ ...dotPatternStyle, opacity: 0.025 }}
       />
       <div className="absolute inset-0 bg-linear-to-b from-black/0 via-black/0 to-black pointer-events-none" />
+
+      {/* Aurora orb */}
+      <motion.div
+        className="absolute pointer-events-none"
+        animate={{ x: [0, 20, -25, 0], y: [0, -15, 20, 0], scale: [1, 1.08, 0.95, 1] }}
+        transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          width: 650, height: 550, borderRadius: "50%",
+          background: "radial-gradient(ellipse, rgba(255,255,255,0.04) 0%, transparent 70%)",
+          filter: "blur(90px)", bottom: "5%", left: "-8%",
+        }}
+      />
+      {/* Noise grain */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.025] mix-blend-overlay" style={{ zIndex: 1 }}>
+        <filter id="proj-noise">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#proj-noise)" />
+      </svg>
 
       <motion.div
         initial={{ opacity: 0 }}

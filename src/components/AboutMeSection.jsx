@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
 import {
   Terminal, Sparkles, Code2, Users, Heart, Target, Shield,
   Lightbulb, BookOpen, Trophy, Briefcase, Award, Rocket,
@@ -200,6 +200,25 @@ const AboutMeSection = () => {
   const isInView = useInView(sectionRef, { amount: 0.1, once: true });
   const { get: getContent } = useApi();
 
+  /* Photo 3D tilt */
+  const pRotX = useMotionValue(0);
+  const pRotY = useMotionValue(0);
+  const pGlowX = useMotionValue(50);
+  const pGlowY = useMotionValue(50);
+  const pSpringX = useSpring(pRotX, { stiffness: 200, damping: 22, mass: 0.6 });
+  const pSpringY = useSpring(pRotY, { stiffness: 200, damping: 22, mass: 0.6 });
+  const pShimmer = useMotionTemplate`radial-gradient(circle at ${pGlowX}% ${pGlowY}%, rgba(255,255,255,0.09), transparent 60%)`;
+  const onPhotoMove = useCallback((e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    pRotX.set((y - 0.5) * -12);
+    pRotY.set((x - 0.5) * 12);
+    pGlowX.set(x * 100);
+    pGlowY.set(y * 100);
+  }, [pRotX, pRotY, pGlowX, pGlowY]);
+  const onPhotoLeave = useCallback(() => { pRotX.set(0); pRotY.set(0); }, [pRotX, pRotY]);
+
   useEffect(() => {
     getContent("/content").then((res) => {
       if (res?.data) setContentData(res.data);
@@ -278,6 +297,26 @@ const AboutMeSection = () => {
       {/* Dot grid */}
       <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={DOT_BG} />
 
+      {/* Aurora orb */}
+      <motion.div
+        className="absolute pointer-events-none"
+        animate={{ x: [0, -25, 15, 0], y: [0, 20, -10, 0], scale: [1, 1.1, 0.93, 1] }}
+        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          width: 600, height: 600, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.045) 0%, transparent 70%)",
+          filter: "blur(90px)", top: "0%", right: "-12%",
+        }}
+      />
+      {/* Noise grain */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.025] mix-blend-overlay" style={{ zIndex: 1 }}>
+        <filter id="about-noise">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#about-noise)" />
+      </svg>
+
       <div className="relative z-10 container mx-auto px-4 max-w-6xl">
 
         {/* ── Section header ── */}
@@ -305,9 +344,26 @@ const AboutMeSection = () => {
             transition={{ duration: 0.55, delay: 0.1 }}
             className="flex flex-col gap-5"
           >
-            {/* Photo card */}
-            <div className="relative group">
-              {/* Corner accents — outside overflow-hidden so they're visible */}
+            {/* Photo card with 3D tilt */}
+            <motion.div
+              className="relative group"
+              style={{ transformPerspective: 1000, rotateX: pSpringX, rotateY: pSpringY, transformStyle: "preserve-3d" }}
+              onMouseMove={onPhotoMove}
+              onMouseLeave={onPhotoLeave}
+            >
+              {/* Spinning border ring */}
+              <div className="absolute -inset-px rounded-2xl overflow-hidden opacity-50">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0"
+                  style={{
+                    background: "conic-gradient(from 0deg, transparent 65%, rgba(255,255,255,0.2) 78%, transparent 90%)",
+                    scale: 1.5, transformOrigin: "center",
+                  }}
+                />
+              </div>
+              {/* Corner accents */}
               <div className="absolute -top-2 -left-2 w-5 h-5 border-t-2 border-l-2 border-white/25 rounded-tl-sm z-10" />
               <div className="absolute -top-2 -right-2 w-5 h-5 border-t-2 border-r-2 border-white/25 rounded-tr-sm z-10" />
               <div className="absolute -bottom-2 -left-2 w-5 h-5 border-b-2 border-l-2 border-white/25 rounded-bl-sm z-10" />
@@ -322,6 +378,15 @@ const AboutMeSection = () => {
                 />
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                {/* Holographic shimmer */}
+                <motion.div className="absolute inset-0 pointer-events-none" style={{ background: pShimmer }} />
+                {/* Moving scan sweep */}
+                <motion.div
+                  className="absolute inset-x-0 h-20 pointer-events-none"
+                  style={{ background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.04), transparent)" }}
+                  animate={{ top: ["-15%", "115%"] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
+                />
 
                 {/* Name overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-5">
@@ -343,7 +408,7 @@ const AboutMeSection = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Stats grid */}
             <div className="grid grid-cols-4 gap-3">

@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
 import {
   Search, Palette, Code2, TestTube, Rocket, Settings,
   ArrowRight, Sparkles,
@@ -60,6 +60,13 @@ const StepNode = ({ step, index, isInView }) => {
       transition={{ duration: 0.5, delay: 0.15, type: "spring", stiffness: 180, damping: 14 }}
       className="relative z-10 flex items-center justify-center mt-6"
     >
+      {/* Outermost slow ring */}
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+        className="absolute w-20 h-20 rounded-full border border-white/[0.04]"
+        style={{ borderStyle: "dashed" }}
+      />
       {/* Outer rotating dashed ring */}
       <motion.div
         animate={{ rotate: 360 }}
@@ -75,33 +82,68 @@ const StepNode = ({ step, index, isInView }) => {
       {/* Pulse glow on enter */}
       <motion.div
         initial={{ scale: 0.5, opacity: 0.6 }}
+        animate={isInView ? { scale: 2.8, opacity: 0 } : {}}
+        transition={{ duration: 1.1, delay: 0.2 }}
+        className="absolute w-10 h-10 rounded-full bg-white/12"
+      />
+      {/* Second pulse (delayed) */}
+      <motion.div
+        initial={{ scale: 0.5, opacity: 0.4 }}
         animate={isInView ? { scale: 2.2, opacity: 0 } : {}}
-        transition={{ duration: 0.9, delay: 0.2 }}
-        className="absolute w-10 h-10 rounded-full bg-white/10"
+        transition={{ duration: 1.1, delay: 0.5 }}
+        className="absolute w-10 h-10 rounded-full bg-white/8"
       />
       {/* Node circle */}
-      <div className="relative w-10 h-10 rounded-full border border-white/15 bg-black flex items-center justify-center">
-        <Icon className="w-4 h-4 text-white/50" />
-        {/* Inner glow dot */}
+      <div className="relative w-10 h-10 rounded-full border border-white/20 bg-black flex items-center justify-center shadow-[0_0_12px_rgba(255,255,255,0.08)]">
+        <Icon className="w-4 h-4 text-white/60" />
+        {/* Inner ambient glow */}
         <motion.div
-          animate={{ opacity: [0.3, 0.7, 0.3] }}
+          animate={{ opacity: [0.2, 0.6, 0.2] }}
           transition={{ duration: 2.5, repeat: Infinity, delay: index * 0.3 }}
-          className="absolute inset-0 rounded-full bg-white/5"
+          className="absolute inset-0 rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%)" }}
         />
       </div>
     </motion.div>
   );
 };
 
-/* ─── Step card ─── */
-const StepCard = ({ step, isInView, fromLeft }) => (
+/* ─── Step card with 3D tilt ─── */
+const StepCard = ({ step, isInView, fromLeft }) => {
+  const rotX = useMotionValue(0);
+  const rotY = useMotionValue(0);
+  const glowX = useMotionValue(50);
+  const glowY = useMotionValue(50);
+  const sX = useSpring(rotX, { stiffness: 250, damping: 22 });
+  const sY = useSpring(rotY, { stiffness: 250, damping: 22 });
+  const shimmer = useMotionTemplate`radial-gradient(circle at ${glowX}% ${glowY}%, rgba(255,255,255,0.05), transparent 60%)`;
+
+  const onMove = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    rotX.set((y - 0.5) * -7);
+    rotY.set((x - 0.5) * 7);
+    glowX.set(x * 100);
+    glowY.set(y * 100);
+  };
+  const onLeave = () => { rotX.set(0); rotY.set(0); };
+
+  return (
   <motion.div
     initial={{ opacity: 0, x: fromLeft ? -40 : 40, y: 10 }}
     animate={isInView ? { opacity: 1, x: 0, y: 0 } : {}}
     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
     whileHover={{ y: -4, transition: { duration: 0.25 } }}
-    className="group rounded-2xl border border-white/6 bg-white/[0.02] p-5 hover:border-white/14 hover:bg-white/[0.04] transition-colors duration-300 cursor-default"
+    style={{ transformPerspective: 900, rotateX: sX, rotateY: sY, transformStyle: "preserve-3d" }}
+    onMouseMove={onMove}
+    onMouseLeave={onLeave}
+    className="group relative rounded-2xl border border-white/6 bg-white/[0.02] p-5 hover:border-white/14 hover:bg-white/[0.04] transition-colors duration-300 cursor-default overflow-hidden"
   >
+    <motion.div
+      className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+      style={{ background: shimmer }}
+    />
     {/* Number + title row */}
     <div className="flex items-start justify-between gap-3 mb-3">
       <div className="min-w-0">
@@ -158,7 +200,8 @@ const StepCard = ({ step, isInView, fromLeft }) => (
       ))}
     </div>
   </motion.div>
-);
+  );
+};
 
 /* ─── One full step row ─── */
 const StepRow = ({ step, index }) => {
@@ -222,19 +265,45 @@ const ProcessSection = () => {
       {/* Dot grid */}
       <div
         className="absolute inset-0 opacity-[0.025] pointer-events-none"
-        style={{
-          backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
-        }}
+        style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "28px 28px" }}
       />
 
       {/* Subtle radial glow centre */}
       <div
         className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(255,255,255,0.02), transparent)" }}
+      />
+
+      {/* Aurora orbs */}
+      <motion.div
+        className="absolute pointer-events-none"
+        animate={{ x: [0, 20, -15, 0], y: [0, -25, 18, 0], scale: [1, 1.1, 0.94, 1] }}
+        transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
         style={{
-          background: "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(255,255,255,0.02), transparent)",
+          width: 500, height: 500, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)",
+          filter: "blur(90px)", top: "5%", left: "-8%",
         }}
       />
+      <motion.div
+        className="absolute pointer-events-none"
+        animate={{ x: [0, -18, 12, 0], y: [0, 22, -16, 0], scale: [1, 0.92, 1.08, 1] }}
+        transition={{ duration: 30, repeat: Infinity, ease: "easeInOut", delay: 8 }}
+        style={{
+          width: 450, height: 450, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.035) 0%, transparent 70%)",
+          filter: "blur(90px)", bottom: "10%", right: "-5%",
+        }}
+      />
+
+      {/* Noise grain */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.025] mix-blend-overlay" style={{ zIndex: 1 }}>
+        <filter id="proc-noise">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#proc-noise)" />
+      </svg>
 
       <div className="relative z-10 container mx-auto px-4 max-w-5xl">
 
